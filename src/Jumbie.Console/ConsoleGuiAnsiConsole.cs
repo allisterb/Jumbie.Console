@@ -1,0 +1,205 @@
+using System;
+using System.IO;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using ConsoleGUI.Api;
+using ConsoleGUI.Data;
+using ConsoleGUI.Space;
+using Spectre.Console;
+using Spectre.Console.Rendering;
+
+namespace Jumbie.Console;
+
+public class ConsoleGuiAnsiConsole : IAnsiConsole, IDisposable
+{
+    private readonly IConsole _console;
+    private readonly ConsoleGuiCursor _cursor;
+    private readonly ConsoleGuiInput _input;
+    private readonly ConsoleGuiExclusivityMode _exclusivityMode;
+    private readonly RenderPipeline _pipeline;
+    private readonly Profile _profile;
+
+    private int _cursorX;
+    private int _cursorY;
+
+    public ConsoleGuiAnsiConsole(IConsole console)
+    {
+        _console = console ?? throw new ArgumentNullException(nameof(console));
+        _cursor = new ConsoleGuiCursor(this);
+        _input = new ConsoleGuiInput(console);
+        _exclusivityMode = new ConsoleGuiExclusivityMode();
+        _pipeline = new RenderPipeline();
+        
+        var output = new ConsoleGuiOutput(console);
+        _profile = new Profile(output, Encoding.UTF8);
+        
+        _profile.Capabilities.Ansi = true;
+        _profile.Capabilities.ColorSystem = ColorSystem.TrueColor;
+        _profile.Capabilities.Interactive = true;
+        _profile.Capabilities.Unicode = true;
+        
+        _cursorX = 0;
+        _cursorY = 0;
+    }
+
+    public Profile Profile => _profile;
+    public IAnsiConsoleCursor Cursor => _cursor;
+    public IAnsiConsoleInput Input => _input;
+    public IExclusivityMode ExclusivityMode => _exclusivityMode;
+    public RenderPipeline Pipeline => _pipeline;
+
+    public void Clear(bool home)
+    {
+        _console.Initialize(); 
+        if (home)
+        {
+            _cursorX = 0;
+            _cursorY = 0;
+        }
+    }
+
+    public void Write(IRenderable renderable)
+    {
+        var segments = renderable.GetSegments(this);
+        foreach (var segment in segments)
+        {
+            if (segment.IsControlCode) continue;
+
+            var style = segment.Style;
+            var fg = StyleAdapter.ToConsoleColor(style.Foreground);
+            var bg = StyleAdapter.ToConsoleColor(style.Background);
+
+            foreach (char c in segment.Text)
+            {
+                if (c == '\n')
+                {
+                    _cursorY++;
+                    _cursorX = 0;
+                    continue;
+                }
+                
+                if (c == '\r') continue;
+
+                var position = new Position(_cursorX, _cursorY);
+                if (IsValidPosition(position))
+                {
+                    _console.Write(position, new Character(c, fg, bg));
+                }
+                
+                _cursorX++;
+                if (_cursorX >= _console.Size.Width)
+                {
+                    _cursorX = 0;
+                    _cursorY++;
+                }
+            }
+        }
+    }
+
+    public void Dispose()
+    {
+    }
+    
+    internal void SetCursorPosition(int x, int y)
+    {
+        _cursorX = x;
+        _cursorY = y;
+    }
+    
+    internal void MoveCursor(int dx, int dy)
+    {
+        _cursorX += dx;
+        _cursorY += dy;
+    }
+
+    private bool IsValidPosition(Position position)
+    {
+        return position.X >= 0 && position.X < _console.Size.Width &&
+               position.Y >= 0 && position.Y < _console.Size.Height;
+    }
+}
+
+internal class ConsoleGuiOutput : IAnsiConsoleOutput
+{
+    private readonly IConsole _console;
+    
+    public ConsoleGuiOutput(IConsole console) => _console = console;
+
+    public TextWriter Writer => System.Console.Out; 
+    public bool IsTerminal => true;
+    public int Width => _console.Size.Width;
+    public int Height => _console.Size.Height;
+
+    public void SetEncoding(Encoding encoding) { }
+}
+
+internal class ConsoleGuiCursor : IAnsiConsoleCursor
+{
+    private readonly ConsoleGuiAnsiConsole _parent;
+
+    public ConsoleGuiCursor(ConsoleGuiAnsiConsole parent) => _parent = parent;
+
+    public void Show(bool show) { } // StandardConsole manages this partially, but we might not have control via IConsole interface easily without casting. StandardConsole hides it by default.
+
+    public void SetPosition(int column, int line)
+    {
+        _parent.SetCursorPosition(column, line);
+    }
+
+    public void Move(CursorDirection direction, int steps)
+    {
+        switch (direction)
+        {
+            case CursorDirection.Up:
+                _parent.MoveCursor(0, -steps);
+                break;
+            case CursorDirection.Down:
+                _parent.MoveCursor(0, steps);
+                break;
+            case CursorDirection.Left:
+                _parent.MoveCursor(-steps, 0);
+                break;
+            case CursorDirection.Right:
+                _parent.MoveCursor(steps, 0);
+                break;
+        }
+    }
+}
+
+internal class ConsoleGuiInput : IAnsiConsoleInput
+{
+    private readonly IConsole _console;
+
+    public ConsoleGuiInput(IConsole console) => _console = console;
+
+    public bool IsKeyAvailable() => _console.KeyAvailable;
+
+    public ConsoleKeyInfo? ReadKey(bool intercept)
+    {
+        return _console.ReadKey();
+    }
+
+    public Task<ConsoleKeyInfo?> ReadKeyAsync(bool intercept, CancellationToken cancellationToken)
+    {
+        // Simple polling simulation for async
+        return Task.Run(async () =>
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                if (_console.KeyAvailable)
+                {
+                    return (ConsoleKeyInfo?)_console.ReadKey();
+                }
+                await Task.Delay(10, cancellationToken);
+            }
+            return null;
+        }, cancellationToken);
+    }
+}
+
+internal class ConsoleGuiExclusivityMode : IExclusivityMode
+{
+    public T Run<T>(Func<T> func) => func();
+    public Task<T> RunAsync<T>(Func<Task<T>> func) => func();
+}
