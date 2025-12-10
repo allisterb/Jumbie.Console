@@ -11,7 +11,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleGUI", "..\ext\C-shar
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Spectre.Console", "..\ext\spectre.console\src\Spectre.Console\Spectre.Console.csproj", "{5D091ADC-734A-965F-1D1B-E1B33540D2D6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jumbie.Demo", "Jumbie.Demo\Jumbie.Demo.csproj", "{6FE2DE0E-97C9-4486-B664-90E8B45BC4CD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jumbie.Console.TestDemo", "Jumbie.Console.TestDemo\Jumbie.Console.TestDemo.csproj", "{6FE2DE0E-97C9-4486-B664-90E8B45BC4CD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
