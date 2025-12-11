@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using ConsoleGUI.Api;
 using ConsoleGUI.Common;
 using ConsoleGUI.Data;
@@ -16,18 +17,22 @@ using Jumbie.Console;
 
 namespace Jumbie.Console.Prompts
 {
-    public class ConsoleGuiTextPrompt<T> : Control, IInputListener
+    public class ConsoleGuiTextPrompt<T> : Control, IInputListener, IDisposable
     {
         private readonly string _prompt;
         private readonly StringComparer? _comparer;
         private readonly BufferConsole _bufferConsole;
         private readonly ConsoleGuiAnsiConsole _ansiConsole;
-
+        private readonly object _lock = new object();
+        
         private string _input = string.Empty;
         private int _caretPosition = 0;
         private string? _validationError = null;
         private int _inputStartX = 0;
         private int _inputStartY = 0;
+        
+        private Timer? _cursorBlinkTimer;
+        private bool _blinkState = true;
 
         public event EventHandler<T>? Committed;
 
@@ -45,9 +50,10 @@ namespace Jumbie.Console.Prompts
         public Func<T, ValidationResult>? Validator { get; set; }
         public Style? DefaultValueStyle { get; set; }
         public Style? ChoicesStyle { get; set; }
-        internal DefaultPromptValue<T>? DefaultValue { get; set; } // Simplified: public setter in adapting? internal matches source
+        public bool ShowCursor { get; set; } = true;
 
-        // Wrapper for internal DefaultValue
+        internal DefaultPromptValue<T>? DefaultValue { get; set; }
+
         public void SetDefaultValue(T value)
         {
             DefaultValue = new DefaultPromptValue<T>(value);
@@ -59,49 +65,78 @@ namespace Jumbie.Console.Prompts
             _comparer = comparer;
             _bufferConsole = new BufferConsole();
             _ansiConsole = new ConsoleGuiAnsiConsole(_bufferConsole);
+            
+            _cursorBlinkTimer = new Timer(OnCursorBlink, null, 500, 500);
+        }
+        
+        private void OnCursorBlink(object? state)
+        {
+            lock (_lock)
+            {
+                _blinkState = !_blinkState;
+                // Only redraw if we are actually showing cursor, to avoid unnecessary updates
+                if (ShowCursor)
+                {
+                    Redraw();
+                }
+            }
+        }
+
+        public void Dispose()
+        {
+            _cursorBlinkTimer?.Dispose();
+            _cursorBlinkTimer = null;
         }
 
         public override Cell this[Position position]
         {
             get
             {
-                Cell cell = new Cell(Character.Empty);
-                if (_bufferConsole.Buffer != null && 
-                    position.X >= 0 && position.X < Size.Width && 
-                    position.Y >= 0 && position.Y < Size.Height)
+                lock (_lock)
                 {
-                    cell = _bufferConsole.Buffer[position.X, position.Y];
-                }
-
-                // Render Cursor
-                if (position.X == _inputStartX + _caretPosition && position.Y == _inputStartY)
-                {
-                    // Use a visible background for the cursor (dark gray similar to TextBox)
-                    if (cell.Content == null || cell.Content == '\0')
+                    Cell cell = new Cell(Character.Empty);
+                    if (_bufferConsole.Buffer != null && 
+                        position.X >= 0 && position.X < Size.Width && 
+                        position.Y >= 0 && position.Y < Size.Height)
                     {
-                         return new Cell(' ').WithBackground(new ConsoleGUI.Data.Color(100, 100, 100));
+                        cell = _bufferConsole.Buffer[position.X, position.Y];
                     }
-                    return cell.WithBackground(new ConsoleGUI.Data.Color(100, 100, 100));
-                }
 
-                return cell;
+                    // Render Cursor
+                    if (ShowCursor && _blinkState && 
+                        position.X == _inputStartX + _caretPosition && 
+                        position.Y == _inputStartY)
+                    {
+                        if (cell.Content == null || cell.Content == '\0')
+                        {
+                             return new Cell(' ').WithBackground(new ConsoleGUI.Data.Color(100, 100, 100));
+                        }
+                        return cell.WithBackground(new ConsoleGUI.Data.Color(100, 100, 100));
+                    }
+
+                    return cell;
+                }
             }
         }
 
         protected override void Initialize()
         {
-            var targetSize = MaxSize;
-            if (targetSize.Width > 1000) targetSize = new ConsoleGuiSize(1000, targetSize.Height);
-            if (targetSize.Height > 1000) targetSize = new ConsoleGuiSize(targetSize.Width, 1000);
+            lock (_lock)
+            {
+                var targetSize = MaxSize;
+                if (targetSize.Width > 1000) targetSize = new ConsoleGuiSize(1000, targetSize.Height);
+                if (targetSize.Height > 1000) targetSize = new ConsoleGuiSize(targetSize.Width, 1000);
 
-            Resize(targetSize);
-            _bufferConsole.Resize(Size);
+                Resize(targetSize);
+                _bufferConsole.Resize(Size);
 
-            Render();
+                Render();
+            }
         }
 
         private void Render()
         {
+            // Assumes lock is held by caller (Initialize or OnInput)
             if (Size.Width <= 0 || Size.Height <= 0) return;
 
             _ansiConsole.Clear(true);
@@ -126,9 +161,6 @@ namespace Jumbie.Console.Prompts
                 appendSuffix = true;
                 var defaultValueStyle = DefaultValueStyle?.ToMarkup() ?? "green";
                 var defaultValue = converter(DefaultValue.Value.Value);
-                // Note: Masking default value if secret? TextPrompt source does: IsSecret ? defaultValue.Mask(Mask) : defaultValue
-                // We don't have Mask extension here easily unless we copy it. 
-                // Simple masking:
                 var displayDefault = IsSecret && Mask.HasValue ? new string(Mask.Value, defaultValue.Length) : defaultValue;
                 
                 builder.AppendFormat(
@@ -146,29 +178,16 @@ namespace Jumbie.Console.Prompts
             
             _ansiConsole.Markup(markup + " ");
             
-            // Capture input start position
             _inputStartX = _ansiConsole.CursorX;
             _inputStartY = _ansiConsole.CursorY;
 
             // 2. Render Input
-            // We need to render the input. If it's secret, mask it.
             string displayInput = _input;
             if (IsSecret && Mask.HasValue)
             {
                 displayInput = new string(Mask.Value, _input.Length);
             }
             
-            // We want to highlight the cursor or just render it? 
-            // Spectre's AnsiConsole doesn't really have a "cursor" visual in the buffer unless we simulate it or relying on terminal cursor.
-            // ConsoleGUI relies on cells. 
-            // We can simulate cursor by reversing colors at caret position if we want, 
-            // OR we can just rely on ConsoleGUI's native cursor handling if we were a TextBox, 
-            // but here we are rendering via Spectre.
-            // Let's just write the text.
-            
-            // Note: We need to escape markup in input if not secret?
-            // Actually, Write() in Spectre writes plain text, Markup() parses.
-            // We use Write() for input.
             _ansiConsole.Write(displayInput);
 
             // 3. Render Error (if any)
@@ -183,105 +202,102 @@ namespace Jumbie.Console.Prompts
 
         void IInputListener.OnInput(InputEvent inputEvent)
         {
-            // Standard text editing logic
-            bool handled = false;
-            string? newInput = null;
-
-            switch (inputEvent.Key.Key)
+            lock (_lock)
             {
-                case ConsoleKey.LeftArrow:
-                    _caretPosition = Math.Max(0, _caretPosition - 1);
-                    handled = true;
-                    break;
-                case ConsoleKey.RightArrow:
-                    _caretPosition = Math.Min(_input.Length, _caretPosition + 1);
-                    handled = true;
-                    break;
-                case ConsoleKey.Home:
-                    _caretPosition = 0;
-                    handled = true;
-                    break;
-                case ConsoleKey.End:
-                    _caretPosition = _input.Length;
-                    handled = true;
-                    break;
-                case ConsoleKey.Backspace:
-                    if (_caretPosition > 0)
-                    {
-                        newInput = _input.Remove(_caretPosition - 1, 1);
-                        _caretPosition--;
-                        handled = true;
-                    }
-                    break;
-                case ConsoleKey.Delete:
-                    if (_caretPosition < _input.Length)
-                    {
-                        newInput = _input.Remove(_caretPosition, 1);
-                        handled = true;
-                    }
-                    break;
-                case ConsoleKey.Enter:
-                    AttemptCommit();
-                    handled = true;
-                    break;
-                default:
-                    if (!char.IsControl(inputEvent.Key.KeyChar))
-                    {
-                        newInput = _input.Insert(_caretPosition, inputEvent.Key.KeyChar.ToString());
-                        _caretPosition++;
-                        handled = true;
-                    }
-                    break;
-            }
+                bool handled = false;
+                string? newInput = null;
+                
+                // Reset blink state on input
+                _blinkState = true;
+                if (_cursorBlinkTimer != null)
+                {
+                    _cursorBlinkTimer.Change(500, 500);
+                }
 
-            if (newInput != null)
-            {
-                _input = newInput;
-            }
+                switch (inputEvent.Key.Key)
+                {
+                    case ConsoleKey.LeftArrow:
+                        _caretPosition = Math.Max(0, _caretPosition - 1);
+                        handled = true;
+                        break;
+                    case ConsoleKey.RightArrow:
+                        _caretPosition = Math.Min(_input.Length, _caretPosition + 1);
+                        handled = true;
+                        break;
+                    case ConsoleKey.Home:
+                        _caretPosition = 0;
+                        handled = true;
+                        break;
+                    case ConsoleKey.End:
+                        _caretPosition = _input.Length;
+                        handled = true;
+                        break;
+                    case ConsoleKey.Backspace:
+                        if (_caretPosition > 0)
+                        {
+                            newInput = _input.Remove(_caretPosition - 1, 1);
+                            _caretPosition--;
+                            handled = true;
+                        }
+                        break;
+                    case ConsoleKey.Delete:
+                        if (_caretPosition < _input.Length)
+                        {
+                            newInput = _input.Remove(_caretPosition, 1);
+                            handled = true;
+                        }
+                        break;
+                    case ConsoleKey.Enter:
+                        AttemptCommit();
+                        handled = true;
+                        break;
+                    default:
+                        if (!char.IsControl(inputEvent.Key.KeyChar))
+                        {
+                            newInput = _input.Insert(_caretPosition, inputEvent.Key.KeyChar.ToString());
+                            _caretPosition++;
+                            handled = true;
+                        }
+                        break;
+                }
 
-            if (handled)
-            {
-                inputEvent.Handled = true;
-                // Re-render
-                Render();
+                if (newInput != null)
+                {
+                    _input = newInput;
+                }
+
+                if (handled)
+                {
+                    inputEvent.Handled = true;
+                    Render();
+                }
             }
         }
 
         private void AttemptCommit()
         {
-             // Logic adapted from TextPrompt.ShowAsync loop
-             
              // 1. Empty check
              if (string.IsNullOrWhiteSpace(_input))
              {
                  if (DefaultValue != null)
                  {
-                     // Commit default
                      Committed?.Invoke(this, DefaultValue.Value.Value);
                      return;
                  }
                  
                  if (AllowEmpty)
                  {
-                     // Convert empty string to T?
-                     // If T is string, return empty.
-                     // If T is nullable, null?
-                     // Try convert empty string.
                      if (TypeConverterHelper.TryConvertFromStringWithCulture<T>(_input, Culture, out var emptyResult))
                      {
                          Committed?.Invoke(this, emptyResult!);
                          return;
                      }
                  }
-                 
-                 // If not allowed empty and no default, just ignore or show error?
-                 // TextPrompt continues loop.
                  return; 
              }
 
              // 2. Choices check
              var converter = Converter ?? TypeConverterHelper.ConvertToString;
-             // Re-create map (inefficient but safe)
              var choiceMap = Choices.ToDictionary(choice => converter(choice), choice => choice, _comparer);
 
              T? result;
@@ -321,13 +337,11 @@ namespace Jumbie.Console.Prompts
                  }
              }
 
-             // Success
              _validationError = null;
              Committed?.Invoke(this, result);
         }
     }
     
-    // Minimal helper for internal DefaultPromptValue
     internal struct DefaultPromptValue<T>
     {
         public T Value { get; }
