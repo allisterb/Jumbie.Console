@@ -26,6 +26,8 @@ namespace Jumbie.Console.Prompts
         private string _input = string.Empty;
         private int _caretPosition = 0;
         private string? _validationError = null;
+        private int _inputStartX = 0;
+        private int _inputStartY = 0;
 
         public event EventHandler<T>? Committed;
 
@@ -63,9 +65,26 @@ namespace Jumbie.Console.Prompts
         {
             get
             {
-                if (_bufferConsole.Buffer == null) return new Cell(Character.Empty);
-                if (position.X < 0 || position.X >= Size.Width || position.Y < 0 || position.Y >= Size.Height) return new Cell(Character.Empty);
-                return _bufferConsole.Buffer[position.X, position.Y];
+                Cell cell = new Cell(Character.Empty);
+                if (_bufferConsole.Buffer != null && 
+                    position.X >= 0 && position.X < Size.Width && 
+                    position.Y >= 0 && position.Y < Size.Height)
+                {
+                    cell = _bufferConsole.Buffer[position.X, position.Y];
+                }
+
+                // Render Cursor
+                if (position.X == _inputStartX + _caretPosition && position.Y == _inputStartY)
+                {
+                    // Use a visible background for the cursor (dark gray similar to TextBox)
+                    if (cell.Content == null || cell.Content == '\0')
+                    {
+                         return new Cell(' ').WithBackground(new ConsoleGUI.Data.Color(100, 100, 100));
+                    }
+                    return cell.WithBackground(new ConsoleGUI.Data.Color(100, 100, 100));
+                }
+
+                return cell;
             }
         }
 
@@ -126,6 +145,10 @@ namespace Jumbie.Console.Prompts
             }
             
             _ansiConsole.Markup(markup + " ");
+            
+            // Capture input start position
+            _inputStartX = _ansiConsole.CursorX;
+            _inputStartY = _ansiConsole.CursorY;
 
             // 2. Render Input
             // We need to render the input. If it's secret, mask it.

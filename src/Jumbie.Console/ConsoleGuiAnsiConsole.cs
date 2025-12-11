@@ -48,6 +48,9 @@ public class ConsoleGuiAnsiConsole : IAnsiConsole, IDisposable
     public IAnsiConsoleInput Input => _input;
     public IExclusivityMode ExclusivityMode => _exclusivityMode;
     public RenderPipeline Pipeline => _pipeline;
+    
+    internal int CursorX => _cursorX;
+    internal int CursorY => _cursorY;
 
     public void Clear(bool home)
     {
