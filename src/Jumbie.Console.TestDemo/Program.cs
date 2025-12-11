@@ -11,6 +11,7 @@ using ConsoleGuiSize = ConsoleGUI.Space.Size;
 using ConsoleGuiColor = ConsoleGUI.Data.Color;
 using LayoutGrid = ConsoleGUI.Controls.Grid;
 using Jumbie.Console.Prompts;
+using Jumbie.Console.Controls;
 
 class Program
 {
@@ -56,15 +57,21 @@ class Program
         var treeControl = new SpectreWidgetControl(root);
 
         // --- ConsoleGUI Controls ---
-        // The TextBlock to echo input to
-        var infoTextBlock = new TextBlock { Text = "Spectre + ConsoleGUI = <3" };
+        // Spinner
+        var spinner = new ConsoleGuiSpinner
+        {
+            Spinner = Spinner.Known.Dots,
+            Text = "Waiting for input...",
+            Style = Spectre.Console.Style.Parse("green bold")
+        };
+        spinner.Start();
 
         // The TextPrompt control
         var prompt = new ConsoleGuiTextPrompt<string>("[yellow]What is your name?[/]");
-        
         prompt.Committed += (sender, name) => 
         {
-            infoTextBlock.Text = $"Hello, [green]{name}[/]!"; // Use Spectre markup for echo
+            spinner.Text = $"Hello, [blue]{name}[/]!";
+            //spinner.Spinner = Spinner.Known.Ascii; // Change spinner style on success
         };
         
         // --- ConsoleGUI Layout ---
@@ -84,17 +91,19 @@ class Program
         };
 
         // Add controls to grid
-        //grid.AddChild(0, 0, new Margin { Offset = new Offset(1, 1, 1, 1), Content = tableControl }); // Top Left
-        //grid.AddChild(1, 0, new Margin { Offset = new Offset(1, 1, 1, 1), Content = treeControl });  // Top Right
-        grid.AddChild(0, 1, new Margin { Offset = new Offset(1, 1, 1, 1), Content = prompt }); // Bottom Left
-        //grid.AddChild(1, 1, new Box // Bottom Right
-        //{
-        //    HorizontalContentPlacement = Box.HorizontalPlacement.Center,
-        //    VerticalContentPlacement = Box.VerticalPlacement.Center,
-        //    Content = infoTextBlock
-        //});
-
+        grid.AddChild(0, 1, new Margin { Offset = new Offset(1, 1, 1, 1), Content = prompt }); // Top Left
+        grid.AddChild(0, 0, new Margin { Offset = new Offset(1, 1, 1, 1), Content = spinner });  // Top Right
+        //grid.AddChild(0, 1, new Margin { Offset = new Offset(1, 1, 1, 1), Content = chartControl }); // Bottom Left
+        /*
+        grid.AddChild(1, 1, new Box // Bottom Right
+        {
+            HorizontalContentPlacement = Box.HorizontalPlacement.Center,
+            VerticalContentPlacement = Box.VerticalPlacement.Center,
+            Content = spinner
+        });
+        */
         // Main Layout with DockPanel
+        /*
         var mainLayout = new DockPanel
         {
             Placement = DockPanel.DockedControlPlacement.Top,
@@ -114,21 +123,22 @@ class Program
                 DockedControl = new Margin // Prompt at the bottom
                 {
                     Offset = new Offset(2, 0, 2, 1),
-                    Content = infoTextBlock
+                    Content = prompt
                 },
                 FillingControl = new Background // Grid fills the rest
                 {
                     Color = new ConsoleGuiColor(10, 10, 10),
-                    Content = prompt                }
+                    Content = grid 
+                }
             }
         };
-
-        ConsoleManager.Content = mainLayout;
+        */
+        ConsoleManager.Content = grid;
 
         // Main loop
         while (true)
         {
-            ConsoleManager.ReadInput([prompt]);
+            ConsoleManager.ReadInput([prompt, new InputListener()]);
             Thread.Sleep(50);
         }
     }
