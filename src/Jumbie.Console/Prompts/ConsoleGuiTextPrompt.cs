@@ -23,7 +23,6 @@ namespace Jumbie.Console.Prompts
         private readonly StringComparer? _comparer;
         private readonly BufferConsole _bufferConsole;
         private readonly ConsoleGuiAnsiConsole _ansiConsole;
-        private readonly object _lock = new object();
         
         private string _input = string.Empty;
         private int _caretPosition = 0;
@@ -72,14 +71,21 @@ namespace Jumbie.Console.Prompts
             }
         }
         
-        private void OnCursorBlink(object? sender, EventArgs e)
+        private void OnCursorBlink(object? sender, ConsoleGuiTimerEventArgs e)
         {
-            lock (_lock)
+            if (Monitor.TryEnter(e.LockObject))
             {
-                _blinkState = !_blinkState;
-                if (ShowCursor)
+                try
                 {
-                    Redraw();
+                    _blinkState = !_blinkState;
+                    if (ShowCursor)
+                    {
+                        Redraw();
+                    }
+                }
+                finally
+                {
+                    Monitor.Exit(e.LockObject);
                 }
             }
         }
@@ -93,7 +99,7 @@ namespace Jumbie.Console.Prompts
         {
             get
             {
-                lock (_lock)
+                lock (ConsoleGuiTimer.AnimationLock)
                 {
                     Cell cell = new Cell(Character.Empty);
                     if (_bufferConsole.Buffer != null && 
@@ -122,7 +128,7 @@ namespace Jumbie.Console.Prompts
 
         protected override void Initialize()
         {
-            lock (_lock)
+            lock (ConsoleGuiTimer.AnimationLock)
             {
                 var targetSize = MaxSize;
                 if (targetSize.Width > 1000) targetSize = new ConsoleGuiSize(1000, targetSize.Height);
@@ -203,15 +209,13 @@ namespace Jumbie.Console.Prompts
 
         void IInputListener.OnInput(InputEvent inputEvent)
         {
-            lock (_lock)
+            lock (ConsoleGuiTimer.AnimationLock)
             {
                 bool handled = false;
                 string? newInput = null;
                 
-                // Reset blink state on input
                 _blinkState = true;
-                // Note: We cannot reset the global timer easily, but resetting blink state is usually enough.
-
+                
                 switch (inputEvent.Key.Key)
                 {
                     case ConsoleKey.LeftArrow:
@@ -274,7 +278,6 @@ namespace Jumbie.Console.Prompts
 
         private void AttemptCommit()
         {
-             // 1. Empty check
              if (string.IsNullOrWhiteSpace(_input))
              {
                  if (DefaultValue != null)
@@ -294,7 +297,6 @@ namespace Jumbie.Console.Prompts
                  return; 
              }
 
-             // 2. Choices check
              var converter = Converter ?? TypeConverterHelper.ConvertToString;
              var choiceMap = Choices.ToDictionary(choice => converter(choice), choice => choice, _comparer);
 
@@ -314,7 +316,6 @@ namespace Jumbie.Console.Prompts
              }
              else
              {
-                 // 3. Conversion check
                  if (!TypeConverterHelper.TryConvertFromStringWithCulture<T>(_input, Culture, out result) || result == null)
                  {
                      _validationError = ValidationErrorMessage;
@@ -323,7 +324,6 @@ namespace Jumbie.Console.Prompts
                  }
              }
 
-             // 4. Custom Validator
              if (Validator != null)
              {
                  var validationResult = Validator(result);

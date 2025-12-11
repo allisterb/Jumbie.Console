@@ -11,7 +11,6 @@ namespace Jumbie.Console.Controls
 {
     public class ConsoleGuiSpinner : Control, IDisposable
     {
-        private readonly object _lock = new object();
         private readonly BufferConsole _bufferConsole;
         private readonly ConsoleGuiAnsiConsole _ansiConsole;
         
@@ -36,7 +35,7 @@ namespace Jumbie.Console.Controls
             get => _spinner; 
             set 
             {
-                lock(_lock) _spinner = value ?? Spinner.Known.Default; 
+                lock(ConsoleGuiTimer.AnimationLock) _spinner = value ?? Spinner.Known.Default; 
             }
         }
         
@@ -45,7 +44,7 @@ namespace Jumbie.Console.Controls
             get => _style;
             set
             {
-                lock(_lock) _style = value ?? Style.Plain;
+                lock(ConsoleGuiTimer.AnimationLock) _style = value ?? Style.Plain;
             }
         }
 
@@ -54,7 +53,7 @@ namespace Jumbie.Console.Controls
             get => _text;
             set
             {
-                lock(_lock) 
+                lock(ConsoleGuiTimer.AnimationLock) 
                 {
                     _text = value;
                     Render();
@@ -64,7 +63,7 @@ namespace Jumbie.Console.Controls
 
         public void Start()
         {
-            lock(_lock)
+            lock(ConsoleGuiTimer.AnimationLock)
             {
                 if (_isRunning) return;
                 _isRunning = true;
@@ -78,7 +77,7 @@ namespace Jumbie.Console.Controls
         
         public void Stop()
         {
-             lock(_lock)
+             lock(ConsoleGuiTimer.AnimationLock)
              {
                  if (!_isRunning) return;
                  _isRunning = false;
@@ -92,23 +91,30 @@ namespace Jumbie.Console.Controls
             Stop();
         }
 
-        private void OnTick(object? sender, EventArgs e)
+        private void OnTick(object? sender, ConsoleGuiTimerEventArgs e)
         {
-            lock(_lock)
+            if (Monitor.TryEnter(e.LockObject))
             {
-                if (!_isRunning) return;
-                
-                var now = DateTime.UtcNow;
-                var delta = now - _lastUpdate;
-                _lastUpdate = now;
-                
-                _accumulated += delta;
-                
-                if (_accumulated >= _spinner.Interval)
+                try
                 {
-                    _accumulated = TimeSpan.Zero;
-                    _frameIndex = (_frameIndex + 1) % _spinner.Frames.Count;
-                    Render();
+                    if (!_isRunning) return;
+                    
+                    var now = DateTime.UtcNow;
+                    var delta = now - _lastUpdate;
+                    _lastUpdate = now;
+                    
+                    _accumulated += delta;
+                    
+                    if (_accumulated >= _spinner.Interval)
+                    {
+                        _accumulated = TimeSpan.Zero;
+                        _frameIndex = (_frameIndex + 1) % _spinner.Frames.Count;
+                        Render();
+                    }
+                }
+                finally
+                {
+                    Monitor.Exit(e.LockObject);
                 }
             }
         }
@@ -117,7 +123,7 @@ namespace Jumbie.Console.Controls
         {
             get
             {
-                lock(_lock)
+                lock(ConsoleGuiTimer.AnimationLock)
                 {
                     if (_bufferConsole.Buffer == null) return new Cell(Character.Empty);
                     if (position.X < 0 || position.X >= Size.Width || position.Y < 0 || position.Y >= Size.Height) return new Cell(Character.Empty);
@@ -128,7 +134,7 @@ namespace Jumbie.Console.Controls
 
         protected override void Initialize()
         {
-            lock(_lock)
+            lock(ConsoleGuiTimer.AnimationLock)
             {
                 var targetSize = MaxSize;
                 if (targetSize.Width > 1000) targetSize = new ConsoleGuiSize(1000, targetSize.Height);
@@ -140,6 +146,7 @@ namespace Jumbie.Console.Controls
                 Render();
             }
         }
+
 
         private void Render()
         {
