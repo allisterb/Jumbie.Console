@@ -65,7 +65,7 @@ class Program
 
         // --- ConsoleGUI Controls ---
         // Spinner
-        var spinner = new Spinner2
+        var spinner = new Jumbee.Console.Spinner
         {
             SpinnerType = Spectre.Console.Spinner.Known.Dots,
             Text = "Waiting for input...",

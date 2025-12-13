@@ -21,7 +21,7 @@ public abstract class AnimatedControl : Control, IDisposable
     #endregion
 
     #region Indexers
-    public override Cell this[Position position]
+    public sealed override Cell this[Position position]
     {
         get
         {
@@ -56,7 +56,7 @@ public abstract class AnimatedControl : Control, IDisposable
         Stop();
     }
     
-    protected override void Initialize()
+    protected sealed override void Initialize()
     {
         lock (UIUpdate.Lock)
         {
@@ -66,12 +66,13 @@ public abstract class AnimatedControl : Control, IDisposable
             Resize(targetSize);
             _bufferConsole.Resize(Size);
             Render();
+            Redraw();
         }
     }
 
     protected abstract void Render();
 
-    private void OnTick(object? sender, UIUpdateTimerEventArgs e)
+    protected void OnTick(object? sender, UIUpdateTimerEventArgs e)
     {
         lock (e.Lock)
         {
@@ -86,6 +87,7 @@ public abstract class AnimatedControl : Control, IDisposable
                 accumulated = TimeSpan.Zero;
                 frameIndex = (frameIndex + 1) % frameCount;
                 Render();
+                Redraw();
             }
         }
     }

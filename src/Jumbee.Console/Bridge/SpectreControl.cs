@@ -43,7 +43,7 @@ public class SpectreControl<T> : Control, IDisposable where T : IRenderable
     #endregion
 
     #region Indexers
-    public override Cell this[Position position]
+    public sealed override Cell this[Position position]
     {
         get
         {
@@ -63,13 +63,12 @@ public class SpectreControl<T> : Control, IDisposable where T : IRenderable
     #endregion
 
     #region Methods
-
     public void Dispose()
     {
         UIUpdate.Tick -= OnTick;
     }
 
-    protected override void Initialize()
+    protected sealed override void Initialize()
     {
         lock (UIUpdate.Lock)
         {
@@ -85,6 +84,7 @@ public class SpectreControl<T> : Control, IDisposable where T : IRenderable
             _bufferConsole.Resize(Size);
 
             Render();
+            Redraw();
         }
     }
 
@@ -118,6 +118,7 @@ public class SpectreControl<T> : Control, IDisposable where T : IRenderable
             if (_rendersRequested > 0)
             {
                 Render();
+                Redraw();
                 Interlocked.Exchange(ref _rendersRequested, 0u); // Explicitly use 0u for uint
             }
         }
@@ -143,8 +144,7 @@ public class SpectreControl<T> : Control, IDisposable where T : IRenderable
         _ansiConsole.Clear(true);
         // We probably want to render with the full width of the control
         // Spectre will look at the Profile.Width which comes from the IConsole.Size (BufferConsole.Size)
-        _ansiConsole.Write(_content);
-        Redraw();
+        _ansiConsole.Write(_content);        
     }
     #endregion
 
