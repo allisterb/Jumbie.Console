@@ -17,6 +17,8 @@ public class Spinner : Control, IDisposable
     {
         _bufferConsole = new ConsoleBuffer();
         _ansiConsole = new AnsiConsoleBuffer(_bufferConsole);
+        UIUpdate.Tick += OnTick;
+
     }
     #endregion
 
@@ -26,7 +28,7 @@ public class Spinner : Control, IDisposable
         get => _spinner; 
         set 
         {
-            lock(UIUpdate.Lock) _spinner = value ?? Spectre.Console.Spinner.Known.Default; 
+            _spinner = value; 
         }
     }
     
@@ -35,7 +37,7 @@ public class Spinner : Control, IDisposable
         get => _style;
         set
         {
-            lock(UIUpdate.Lock) _style = value ?? Style.Plain;
+            _style = value;
         }
     }
 
@@ -43,12 +45,8 @@ public class Spinner : Control, IDisposable
     {
         get => _text;
         set
-        {
-            lock(UIUpdate.Lock) 
-            {
-                _text = value;
-                Render();
-            }
+        {           
+            _text = value;         
         }
     }
     #endregion
@@ -70,31 +68,22 @@ public class Spinner : Control, IDisposable
 
     #region Methods
     public void Start()
-    {
-        lock(UIUpdate.Lock)
-        {
-            if (_isRunning) return;
-            _isRunning = true;
-            _lastUpdate = DateTime.UtcNow;
-            _accumulated = TimeSpan.Zero;
-            UIUpdate.Tick += OnTick;
-            Render();
-        }
+    {       
+        if (_isRunning) return;
+        _isRunning = true;
+        _lastUpdate = DateTime.UtcNow;
+        _accumulated = TimeSpan.Zero;           
     }
     
     public void Stop()
-    {
-         lock(UIUpdate.Lock)
-         {
-             if (!_isRunning) return;
-             _isRunning = false;
-             UIUpdate.Tick -= OnTick;
-             Render();
-         }
+    {      
+        if (!_isRunning) return;
+        _isRunning = false;                     
     }
 
     public void Dispose()
     {
+        UIUpdate.Tick -= OnTick;
         Stop();
     }
 
@@ -106,10 +95,8 @@ public class Spinner : Control, IDisposable
             
             var now = DateTime.UtcNow;
             var delta = now - _lastUpdate;
-            _lastUpdate = now;
-            
-            _accumulated += delta;
-            
+            _lastUpdate = now;            
+            _accumulated += delta;            
             if (_accumulated >= _spinner.Interval)
             {
                 _accumulated = TimeSpan.Zero;
@@ -125,13 +112,12 @@ public class Spinner : Control, IDisposable
             var targetSize = MaxSize;
             if (targetSize.Width > 1000) targetSize = new ConsoleGuiSize(1000, targetSize.Height);
             if (targetSize.Height > 1000) targetSize = new ConsoleGuiSize(targetSize.Width, 1000);
-
             Resize(targetSize);
             _bufferConsole.Resize(Size);
-
             Render();
         }
     }
+
 
     private void Render()
     {

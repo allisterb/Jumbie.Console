@@ -65,7 +65,7 @@ class Program
 
         // --- ConsoleGUI Controls ---
         // Spinner
-        var spinner = new Jumbee.Console.Spinner
+        var spinner = new Spinner2
         {
             SpinnerType = Spectre.Console.Spinner.Known.Dots,
             Text = "Waiting for input...",
@@ -78,7 +78,7 @@ class Program
         prompt.Committed += (sender, name) => 
         {
             spinner.Text = $"Hello, [blue]{name}[/]!";
-            //spinner.Spinner = Spinner.Known.Ascii; // Change spinner style on success
+            spinner.SpinnerType = Spectre.Console.Spinner.Known.Ascii; // Change spinner style on success
         };
         
         // --- ConsoleGUI Layout ---
