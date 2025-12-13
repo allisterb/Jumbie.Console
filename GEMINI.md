@@ -46,7 +46,7 @@ which is used by ConsoleGUI to draw the control to the console screen. Note the 
 
 * Any public properties or methods that change the visual state of the control must call the Invalidate() method to notify ConsoleGUI that the control needs to be re-rendered.
 *Do not acquire the UI lock in publicly visible properties or methods of a control* as this will inevitably lead to deadlocks. Instead, call Invalidate() to signal that a control needs to be redrawn in the next Paint event.
-When modifying control state stored in collections, use a copy-on-write strategy using the CloneControl() method and setting the Content property to the cloned object, to avoid modifying collections while they might be enumerated during rendering.
+When modifying control state stored in collections, use a copy-on-write strategy using the CloneContent() method and setting the Content property to the cloned object, to avoid modifying collections while they might be enumerated during rendering.
 Since this is inefficient, try to batch multiple changes to control state collections into a single property or index setter when possible.
 
 ## Coding instructions:
@@ -54,7 +54,7 @@ Since this is inefficient, try to batch multiple changes to control state collec
 - All code should be compatible with C# 12.0.
 - Prefer new C# 12.0 features and syntax where applicable.
 - Prefer functional programming paradigms and constructs where appropriate.
-- Prefer concise code over more verbose constructs
+- Prefer concise code over more verbose constructs.
 
 ## Coding Style:
 - Use 4 spaces for indentation.

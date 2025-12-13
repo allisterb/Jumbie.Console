@@ -17,7 +17,7 @@ using ConsoleGuiColor = ConsoleGUI.Data.Color;
 using SpectreColor = Spectre.Console.Color;
 using LayoutGrid = ConsoleGUI.Controls.Grid;
 
-
+using static Jumbee.Console.Color;
 
 class Program
 {
@@ -41,9 +41,9 @@ class Program
 
         // 2. Bar Chart
         var barChart = new Jumbee.Console.BarChart(
-            ("Planning", 12, SpectreColor.Yellow),
-            ("Coding", 54, SpectreColor.Green),
-            ("Testing", 33, SpectreColor.Red)
+            ("Planning", 12, Yellow),
+            ("Coding", 54, Green),
+            ("Testing", 33, Red)
         );
                    
         barChart.Width = 50;
@@ -79,7 +79,7 @@ class Program
         prompt.Committed += (sender, name) => 
         {
             spinner.Text = $"Hello, [blue]{name}[/]!";
-            spinner.SpinnerType = Spectre.Console.Spinner.Known.Ascii; // Change spinner style on success
+            spinner.SpinnerType = Spectre.Console.Spinner.Known.Clock; // Change spinner style on success
         };
         
         // --- ConsoleGUI Layout ---
