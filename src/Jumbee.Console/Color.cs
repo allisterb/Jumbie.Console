@@ -37,6 +37,8 @@ public readonly struct Color
         return new ConsoleGUIColor(color.R, color.G, color.B);
     }
 
+    public ConsoleGUIColor ToConsoleGUIColor() => new ConsoleGUIColor(R, G, B);    
+
     public static Color FromConsoleGUIColor(ConsoleGUIColor color) => new Color(color.Red, color.Green, color.Blue);
     
     #endregion
@@ -45,6 +47,10 @@ public readonly struct Color
     public static implicit operator SpectreColor(Color color) => color.ToSpectreColor();
 
     public static implicit operator Color(SpectreColor color) => FromSpectreColor(color);
+
+    public static implicit operator ConsoleGUIColor(Color color) => color.ToConsoleGUIColor();
+
+    public static implicit operator Color(ConsoleGUIColor color) => FromConsoleGUIColor(color);
     #endregion
 
     #region Fields

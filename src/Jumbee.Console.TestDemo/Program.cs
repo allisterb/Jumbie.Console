@@ -88,7 +88,7 @@ class Program
         {
             Columns = new[]
             {
-                new LayoutGrid.ColumnDefinition(60),
+                new LayoutGrid.ColumnDefinition(),
                 new LayoutGrid.ColumnDefinition(50)
             },
             Rows = new[]
@@ -106,9 +106,12 @@ class Program
         grid.AddChild(1, 1, new Margin { Offset = new Offset(1, 1, 1, 1), Content = tableControl }); // Bottom Left
         grid.AddChild(1, 2, new Margin { Offset = new Offset(1, 1, 1, 1), Content = treeControl }); // Bottom Left
 
-
+        var grid2 = new Jumbee.Console.Grid([
+            [spinner, prompt], 
+            [barChart, tableControl], 
+            [treeControl, treeControl]]);
         // Start the user interface
-        UI.Start(grid);
+        UI.Start(grid2);
 
         // Create a separate timer to update the chartControl content periodically
         var random = new Random();

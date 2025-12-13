@@ -4,6 +4,7 @@ using System;
 using System.Threading;
 
 using ConsoleGUI;
+using ConsoleGUI.Common;
 
 /// <summary>
 /// Manages the overall UI update loop and provides a paint event for controls to subscribe to.
@@ -11,14 +12,14 @@ using ConsoleGUI;
 public static class UI
 {    
     #region Methods
-    public static void Start(IControl root, int paintInterval = 100)
+    public static void Start<T>(Layout<T> root, int paintInterval = 100) where T : Control, IDrawingContextListener
     {
         lock (_internalLock)
         {
             if (_isRunning) return;
             _interval = paintInterval;
             _isRunning = true;
-            ConsoleManager.Content = root;
+            ConsoleManager.Content = root.control;
             _timer = new Timer(OnTick, null, _interval, _interval);             
         }
     }
