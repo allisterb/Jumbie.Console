@@ -11,14 +11,15 @@ using ConsoleGuiSize = ConsoleGUI.Space.Size;
 using ConsoleGUIColor = ConsoleGUI.Data.Color;
 using SpectreConsoleColor = Spectre.Console.Color;
 
-public class SpectreControl<T> : Control where T : IRenderable
-{   
+public class SpectreControl<T> : Control, IDisposable where T : IRenderable
+{
     #region Constructors
     public SpectreControl(T control)
     {
         _control = control;
         _bufferConsole = new BufferConsole();
         _ansiConsole = new AnsiConsoleBuffer(_bufferConsole);
+        UIUpdate.Tick += OnTick;
     }
     #endregion
 
@@ -58,6 +59,19 @@ public class SpectreControl<T> : Control where T : IRenderable
         #endregion
     
         #region Methods
+        public void Dispose()
+        {
+            UIUpdate.Tick -= OnTick;
+        }
+
+        private void OnTick(object? sender, UIUpdateTimerEventArgs e)
+        {
+            lock (e.Lock)
+            {
+                Render();
+            }
+        }
+
         protected override void Initialize()
         {
             lock (UIUpdate.Lock)
