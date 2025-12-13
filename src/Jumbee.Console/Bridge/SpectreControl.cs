@@ -26,7 +26,7 @@ public class SpectreControl<T> : Control, IDisposable where T : IRenderable
         _content = content;
         _bufferConsole = new ConsoleBuffer();
         _ansiConsole = new AnsiConsoleBuffer(_bufferConsole);
-        UIUpdate.Tick += OnTick;
+        UI.Paint += OnPaint;
     }
     #endregion
     
@@ -47,7 +47,7 @@ public class SpectreControl<T> : Control, IDisposable where T : IRenderable
     {
         get
         {
-            lock (UIUpdate.Lock)
+            lock (UI.Lock)
             {
                 if (_bufferConsole.Buffer == null || position.X < 0 || position.X >= Size.Width || position.Y < 0 || position.Y >= Size.Height)
                 {
@@ -65,12 +65,12 @@ public class SpectreControl<T> : Control, IDisposable where T : IRenderable
     #region Methods
     public void Dispose()
     {
-        UIUpdate.Tick -= OnTick;
+        UI.Paint -= OnPaint;
     }
 
     protected sealed override void Initialize()
     {
-        lock (UIUpdate.Lock)
+        lock (UI.Lock)
         {
             // Resize the control to fill the available space
             // We clip it to avoid issues if MaxSize is 'infinite' (though unlikely in this specific layout)
@@ -104,14 +104,14 @@ public class SpectreControl<T> : Control, IDisposable where T : IRenderable
     protected virtual T CloneContent() => throw new NotImplementedException($"Cloning not implemented for type {typeof(T).Name}. Override CloneContent() in derived class.");
 
     /// <summary>
-    /// Handles the tick event triggered by the UI update timer.
+    /// Handles the pain event triggered by the UI timer.
     /// </summary>
     /// <remarks>This method tries to implement thread-safe rendering by locking on the provided synchronization object.
     /// If one or more render requests are pending, it triggers the rendering process and resets the render request
     /// count.</remarks>
     /// <param name="sender">The source of the event. This parameter can be <see langword="null"/>.</param>
-    /// <param name="e">An instance of <see cref="UIUpdateTimerEventArgs"/> containing event data, including a synchronization lock.</param>
-    private void OnTick(object? sender, UIUpdateTimerEventArgs e)
+    /// <param name="e">An instance of <see cref="PaintEventArgs"/> containing event data, including a synchronization lock.</param>
+    private void OnPaint(object? sender, UI.PaintEventArgs e)
     {
         lock (e.Lock)
         {

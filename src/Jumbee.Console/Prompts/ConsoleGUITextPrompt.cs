@@ -31,7 +31,7 @@ public class ConsoleGUITextPrompt<T> : Control, IInputListener, IDisposable wher
 
         if (enableCursorBlink)
         {
-            UIUpdate.Tick += OnCursorBlink;
+            UI.Paint += OnCursorBlink;
         }
     }
     #endregion
@@ -61,7 +61,7 @@ public class ConsoleGUITextPrompt<T> : Control, IInputListener, IDisposable wher
         DefaultValue = new DefaultPromptValue<T>(value);
     }
 
-    private void OnCursorBlink(object? sender, UIUpdateTimerEventArgs e)
+    private void OnCursorBlink(object? sender, UI.PaintEventArgs e)
     {
         lock (e.Lock)
         {
@@ -75,14 +75,14 @@ public class ConsoleGUITextPrompt<T> : Control, IInputListener, IDisposable wher
 
     public void Dispose()
     {
-        UIUpdate.Tick -= OnCursorBlink;
+        UI.Paint -= OnCursorBlink;
     }
 
     public override Cell this[Position position]
     {
         get
         {
-            lock (UIUpdate.Lock)
+            lock (UI.Lock)
             {
                 Cell cell = _emptyCell;
                 if (_bufferConsole.Buffer != null &&
@@ -111,7 +111,7 @@ public class ConsoleGUITextPrompt<T> : Control, IInputListener, IDisposable wher
 
     protected override void Initialize()
     {
-        lock (UIUpdate.Lock)
+        lock (UI.Lock)
         {
             var targetSize = MaxSize;
             if (targetSize.Width > 1000) targetSize = new ConsoleGuiSize(1000, targetSize.Height);
@@ -191,7 +191,7 @@ public class ConsoleGUITextPrompt<T> : Control, IInputListener, IDisposable wher
 
     void IInputListener.OnInput(InputEvent inputEvent)
     {
-        lock (UIUpdate.Lock)
+        lock (UI.Lock)
         {
             bool handled = false;
             string? newInput = null;

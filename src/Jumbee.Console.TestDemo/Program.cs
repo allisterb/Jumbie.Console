@@ -104,11 +104,10 @@ class Program
         grid.AddChild(1, 0, new Margin { Offset = new Offset(1, 1, 1, 1), Content = barChart }); // Bottom Left
         grid.AddChild(1, 1, new Margin { Offset = new Offset(1, 1, 1, 1), Content = tableControl }); // Bottom Left
         grid.AddChild(1, 2, new Margin { Offset = new Offset(1, 1, 1, 1), Content = treeControl }); // Bottom Left
-        
-        ConsoleManager.Content = grid;
 
-        // Start the global animation timer
-        UIUpdate.StartTimer();
+
+        // Start the user interface
+        UI.Start(grid);
 
         // Create a separate timer to update the chartControl content periodically
         var random = new Random();
@@ -139,7 +138,10 @@ public class InputListener : IInputListener
     {
         if (!inputEvent.Handled)
         {
-            Environment.Exit(0);
+            if (inputEvent.Key.Key == ConsoleKey.Escape)
+            {
+                Environment.Exit(0);
+            }
         }
     }
 }

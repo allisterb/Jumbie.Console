@@ -16,7 +16,7 @@ public abstract class AnimatedControl : Control, IDisposable
     {
         _bufferConsole = new ConsoleBuffer();
         _ansiConsole = new AnsiConsoleBuffer(_bufferConsole);
-        UIUpdate.Tick += OnTick;
+        UI.Paint += OnPaint;
     }
     #endregion
 
@@ -25,7 +25,7 @@ public abstract class AnimatedControl : Control, IDisposable
     {
         get
         {
-            lock (UIUpdate.Lock)
+            lock (UI.Lock)
             {
                 if (_bufferConsole.Buffer == null) return _emptyCell;
                 if (position.X < 0 || position.X >= Size.Width || position.Y < 0 || position.Y >= Size.Height) return _emptyCell;
@@ -52,13 +52,13 @@ public abstract class AnimatedControl : Control, IDisposable
 
     public void Dispose()
     {
-        UIUpdate.Tick -= OnTick;
+        UI.Paint -= OnPaint;
         Stop();
     }
     
     protected sealed override void Initialize()
     {
-        lock (UIUpdate.Lock)
+        lock (UI.Lock)
         {
             var targetSize = MaxSize;
             if (targetSize.Width > 1000) targetSize = new ConsoleGuiSize(1000, targetSize.Height);
@@ -72,7 +72,7 @@ public abstract class AnimatedControl : Control, IDisposable
 
     protected abstract void Render();
 
-    protected void OnTick(object? sender, UIUpdateTimerEventArgs e)
+    private void OnPaint(object? sender, UI.PaintEventArgs e)
     {
         lock (e.Lock)
         {
