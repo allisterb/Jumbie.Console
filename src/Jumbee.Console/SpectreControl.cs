@@ -89,9 +89,9 @@ public class SpectreControl<T> : Control, IDisposable where T : IRenderable
     }
 
     /// <summary>
-    /// Indicates the control should be re-rendered on the next UI update tick.
+    /// Indicates the control should be repainted on the next UI update tick.
     /// </summary>
-    protected void Invalidate() => Interlocked.Increment(ref _rendersRequested);
+    protected void Invalidate() => Interlocked.Increment(ref paintRequests);
 
     /// <summary>
     /// Creates a copy of the current instance's control content.
@@ -115,11 +115,11 @@ public class SpectreControl<T> : Control, IDisposable where T : IRenderable
     {
         lock (e.Lock)
         {
-            if (_rendersRequested > 0)
+            if (paintRequests > 0)
             {
                 Render();
                 Redraw();
-                Interlocked.Exchange(ref _rendersRequested, 0u); // Explicitly use 0u for uint
+                Interlocked.Exchange(ref paintRequests, 0u);
             }
         }
     }
@@ -152,7 +152,7 @@ public class SpectreControl<T> : Control, IDisposable where T : IRenderable
     private readonly ConsoleBuffer _bufferConsole;
     private readonly AnsiConsoleBuffer _ansiConsole;
     private T _content;
-    private uint _rendersRequested;
+    private uint paintRequests;
     private static readonly Cell _emptyCell = new Cell(Character.Empty);
     #endregion
 }

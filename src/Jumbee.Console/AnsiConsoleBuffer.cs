@@ -13,7 +13,7 @@ using Spectre.Console;
 using Spectre.Console.Rendering;
 
 /// <summary>
-/// An implementation of Spectre.Console.IAnsiConsole that writes to a BufferConsole.
+/// An implementation of Spectre.Console.IAnsiConsole that writes to a ConsoleBuffer.
 /// </summary>
 public class AnsiConsoleBuffer : IAnsiConsole, IDisposable
 {

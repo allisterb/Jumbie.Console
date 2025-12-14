@@ -23,10 +23,6 @@ class Program
 {
     static void Main(string[] args)
     {
-        // Setup ConsoleGUI
-        ConsoleManager.Setup();
-        ConsoleManager.Resize(new ConsoleGuiSize(120, 40));
-
         // --- Spectre.Console Controls ---
         // 1. Table
         var table = new Table();
@@ -61,6 +57,8 @@ class Program
         
         // --- Wrap Spectre.Console Controls for ConsoleGUI ---
         var tableControl = new SpectreControl<Spectre.Console.Table>(table);
+
+        tableControl.Content.Border = TableBorder.Rounded;  
         // var chartControl = new SpectreControl<Spectre.Console.BarChart>(barChart); // No longer needed
         var treeControl = new SpectreControl<Spectre.Console.Tree>(root);
 
@@ -79,7 +77,7 @@ class Program
         prompt.Committed += (sender, name) => 
         {
             spinner.Text = $"Hello, [blue]{name}[/]!";
-            spinner.SpinnerType = Spectre.Console.Spinner.Known.Clock; // Change spinner style on success
+            spinner.SpinnerType = Spectre.Console.Spinner.Known.Ascii; // Change spinner style on success
         };
         
         // --- ConsoleGUI Layout ---
@@ -88,7 +86,7 @@ class Program
         {
             Columns = new[]
             {
-                new LayoutGrid.ColumnDefinition(),
+                new LayoutGrid.ColumnDefinition(50),
                 new LayoutGrid.ColumnDefinition(50)
             },
             Rows = new[]
@@ -107,12 +105,12 @@ class Program
         grid.AddChild(1, 2, new Margin { Offset = new Offset(1, 1, 1, 1), Content = treeControl }); // Bottom Left
 
         var grid2 = new Jumbee.Console.Grid([
-            [spinner, prompt], 
-            [barChart, tableControl], 
-            [treeControl, treeControl]]);
+            [spinner.WithMargin(1), prompt.WithBorder(ConsoleGUI.Data.BorderStyle.Single).WithVerticalScrollBar(), barChart],
+            [tableControl, treeControl, treeControl]
+        ]);
         // Start the user interface
-        UI.Start(grid2);
-
+        UI.Start(grid2, 130, 20);
+        //UI.Start(grid);
         // Create a separate timer to update the chartControl content periodically
         var random = new Random();
         var chartTimer = new Timer(_ => 

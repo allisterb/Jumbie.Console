@@ -6,7 +6,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-public static class CollectionExtensions
+using ConsoleGUI.Common;
+using ConsoleGUI.Data;
+using ConsoleGUI.Controls;
+using ConsoleGUI.Space;
+
+public static class ControlExtensions
 {
     public static T[][] Transpose<T>(this T[][] source)
     {
@@ -43,5 +48,27 @@ public static class CollectionExtensions
 
         return result;
     }
+        
+    public static Margin WithMargin(this Control control, int left, int top, int right, int bottom) => new Margin
+    {
+        Offset = new Offset(left, top, right, bottom),
+        Content = control
+    };
 
+    public static Margin WithMargin(this Control control, int offset) => new Margin
+    {
+        Offset = new Offset(offset, offset, offset, offset),
+        Content = control
+    };
+
+    public static Border WithBorder(this Control control, BorderStyle style) => new Border
+    {
+        BorderStyle = style,
+        Content = control
+    };
+
+    public static VerticalScrollPanel WithVerticalScrollBar(this Control control) => new VerticalScrollPanel
+    {
+        Content = control
+    };  
 }

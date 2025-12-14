@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ConsoleGUI;
+using ConsoleGUI.Common;
 using ConsoleGUI.Controls;
 
 public class Grid : Layout<ConsoleGUI.Controls.Grid>
@@ -28,4 +29,10 @@ public class Grid : Layout<ConsoleGUI.Controls.Grid>
             }
         }
     }
+
+    public override int Rows => control.Rows.Length;
+
+    public override int Columns => control.Columns.Length;
+
+    public override IControl this[int row, int column] => control.GetChild(column, row);
 }

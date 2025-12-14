@@ -5,24 +5,29 @@ using System.Threading;
 
 using ConsoleGUI;
 using ConsoleGUI.Common;
-
+using ConsoleGUI.Space;
 /// <summary>
 /// Manages the overall UI update loop and provides a paint event for controls to subscribe to.
 /// </summary>
 public static class UI
 {    
     #region Methods
-    public static void Start<T>(Layout<T> root, int paintInterval = 100) where T : Control, IDrawingContextListener
+    public static void Start(IControl layout, int width = 110, int height = 25, int paintInterval = 100)
     {
         lock (_internalLock)
         {
             if (_isRunning) return;
+            ConsoleManager.Setup();
+            ConsoleManager.Resize(new Size(width, height));
             _interval = paintInterval;
             _isRunning = true;
-            ConsoleManager.Content = root.control;
-            _timer = new Timer(OnTick, null, _interval, _interval);             
+            ConsoleManager.Content = layout;
+            _timer = new Timer(OnTick, null, _interval, _interval);
         }
     }
+
+    public static void Start<T>(Layout<T> layout, int width = 110, int height = 25, int paintInterval = 100) where T : Control, IDrawingContextListener =>
+        Start(layout.control, width, height, paintInterval);
 
     public static void Stop()
     {
