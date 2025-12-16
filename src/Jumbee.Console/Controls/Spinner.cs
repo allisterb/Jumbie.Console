@@ -38,7 +38,7 @@ public class Spinner : AnimatedControl
     #endregion
 
     #region Methods
-    protected override void Render()
+    protected sealed override void Render()
     {
         if (Size.Width <= 0 || Size.Height <= 0) return;
 

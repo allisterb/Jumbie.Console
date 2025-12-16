@@ -8,8 +8,6 @@ using ConsoleGUI.Data;
 using ConsoleGUI.Space;
 using Spectre.Console.Rendering;
 
-using ConsoleGuiSize = ConsoleGUI.Space.Size;
-
 /// <summary>
 /// Wraps a Spectre <see cref="IRenderable"/> control for use with ConsoleGUI layout types. 
 /// </summary>
@@ -24,8 +22,7 @@ public class SpectreControl<T> : Control where T : IRenderable
     public SpectreControl(T content) : base()
     {
         _content = content;
-        consoleBuffer = new ConsoleBuffer();
-        ansiConsole = new AnsiConsoleBuffer(consoleBuffer);
+
         
     }
     #endregion
@@ -42,48 +39,7 @@ public class SpectreControl<T> : Control where T : IRenderable
     }
     #endregion
 
-    #region Indexers
-    public sealed override Cell this[Position position]
-    {
-        get
-        {
-            lock (UI.Lock)
-            {
-                if (consoleBuffer.Buffer == null || position.X < 0 || position.X >= Size.Width || position.Y < 0 || position.Y >= Size.Height)
-                {
-                    return _emptyCell;
-                }
-                else
-                {
-                    return consoleBuffer.Buffer[position.X, position.Y];
-                }
-            }
-        }
-    }
-    #endregion
-
-    #region Methods    
-    protected sealed override void Initialize()
-    {
-        lock (UI.Lock)
-        {
-            // Resize the control to fill the available space
-            // We clip it to avoid issues if MaxSize is 'infinite' (though unlikely in this specific layout)
-            var targetSize = MaxSize;
-            targetSize = new ConsoleGuiSize(Math.Max(0, targetSize.Width), Math.Max(0, targetSize.Height));
-
-            if (targetSize.Width > 1000) targetSize = new ConsoleGuiSize(1000, targetSize.Height);
-            if (targetSize.Height > 1000) targetSize = new ConsoleGuiSize(targetSize.Width, 1000);
-
-            Resize(targetSize);
-
-            // Resize buffer using safe dimensions (Size can be negative if Min/Max limits are invalid)
-            consoleBuffer.Resize(new ConsoleGuiSize(Math.Max(0, Size.Width), Math.Max(0, Size.Height)));
-
-            Paint();
-        }
-    }
-    
+    #region Methods           
     /// <summary>
     /// Creates a copy of the current instance's control content.
     /// </summary>
@@ -93,9 +49,7 @@ public class SpectreControl<T> : Control where T : IRenderable
     /// <returns>A new instance of type <typeparamref name="T"/> that is a copy of the current instance's content.</returns>
     /// <exception cref="NotImplementedException">Thrown if the method is not overridden in a derived class.</exception>
     protected virtual T CloneContent() => throw new NotImplementedException($"Cloning not implemented for type {typeof(T).Name}. Override CloneContent() in derived class.");
-
    
-
     /// <summary>
     /// Renders the control's content to the console buffer.
     /// </summary>
@@ -105,7 +59,7 @@ public class SpectreControl<T> : Control where T : IRenderable
     /// This does not actually draw to the console screen, it just updates the buffer. The ConsoleGUI <see cref="ConsoleGUI.ConsoleManager"/> 
     /// handles drawing the buffer on the console screen.
     /// </remarks>
-    protected override void Render()
+    protected sealed override void Render()
     {
         if (Size.Width <= 0 || Size.Height <= 0)
         {
@@ -121,8 +75,6 @@ public class SpectreControl<T> : Control where T : IRenderable
     #endregion
 
     #region Fields
-    private readonly ConsoleBuffer consoleBuffer;
-    private readonly AnsiConsoleBuffer ansiConsole;
     private T _content;
     #endregion
 }
