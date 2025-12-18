@@ -81,47 +81,8 @@ class Program
             spinner.SpinnerType = Spectre.Console.Spinner.Known.Ascii; // Change spinner style on success
         };
         
+       
         /*
-        // --- ConsoleGUI Layout ---
-        // Use a Grid for layout
-        var grid = new LayoutGrid
-        {
-            Columns = new[]
-            {
-                new LayoutGrid.ColumnDefinition(50),
-                new LayoutGrid.ColumnDefinition(50)
-            },
-            Rows = new[]
-            {
-                new LayoutGrid.RowDefinition(15),
-                new LayoutGrid.RowDefinition(20),
-                new LayoutGrid.RowDefinition(40)
-            }
-        };
-
-        // Add controls to grid
-        grid.AddChild(0, 1, new Margin { Offset = new Offset(1, 1, 1, 1), Content = prompt }); // Top Left
-        grid.AddChild(0, 0, new Margin { Offset = new Offset(1, 1, 1, 1), Content = spinner });  // Top Right
-        grid.AddChild(1, 0, new Margin { Offset = new Offset(1, 1, 1, 1), Content = barChart }); // Bottom Left
-        grid.AddChild(1, 1, new Margin { Offset = new Offset(1, 1, 1, 1), Content = tableControl }); // Bottom Left
-        grid.AddChild(1, 2, new Margin { Offset = new Offset(1, 1, 1, 1), Content = treeControl }); // Bottom Left
-        */
-        
-        var internalGrid = new LayoutGrid
-        {
-            Columns = new[]
-            {
-                new LayoutGrid.ColumnDefinition(40),
-                new LayoutGrid.ColumnDefinition(40),
-                new LayoutGrid.ColumnDefinition(50)
-            },
-            Rows = new[]
-            {
-                new LayoutGrid.RowDefinition(15),
-                new LayoutGrid.RowDefinition(20)
-            }
-        };
-
         var borderedPrompt = prompt.WithHeavyBorder().WithBorderColor(Orange1).WithBorderTitle("Input");
         internalGrid.AddChild(0, 0, spinner.WithMargin(1).WithDoubleBorder().WithBorderTitle("Loading"));
         internalGrid.AddChild(1, 0, borderedPrompt);
@@ -130,15 +91,13 @@ class Program
         internalGrid.AddChild(0, 1, tableControl.WithRoundedBorder().WithBorderColor(Aqua).WithBorderTitle("Data"));
         internalGrid.AddChild(1, 1, barChart.WithAsciiBorder().WithBorderColor(Red));
         internalGrid.AddChild(2, 1, treeControl.WithAsciiBorder().WithBorderTitle("Hierarchy"));
-
-        /*
-        var grid2 = new Jumbee.Console.Grid([
-            [spinner,  prompt,       barChart], 
-        ]);
         */
+        
+        var grid = new Jumbee.Console.Grid([20], [40, 40, 50], [[spinner, prompt, barChart]]);
+                
         // Start the user interface
-        //UI.Start(grid2, 130, 20);
-        UI.Start(internalGrid, width:250, height: 60, isTrueColorTerminal: true);
+        UI.Start(grid, 130, 20);
+        //UI.Start(internalGrid, width:250, height: 60, isTrueColorTerminal: true);
         // Create a separate timer to update the chartControl content periodically
         var random = new Random();
         var chartTimer = new Timer(_ => 
@@ -156,7 +115,7 @@ class Program
         // Main loop
         while (true)
         {
-            ConsoleManager.ReadInput([borderedPrompt, prompt, new InputListener()]);
+            ConsoleManager.ReadInput([prompt, new InputListener()]);
             Thread.Sleep(50);
         }
     }

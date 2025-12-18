@@ -175,9 +175,7 @@ public sealed class ControlFrame : ConsoleGUI.Common.Control, IDrawingContextLis
             _controlContext = value;
             Initialize();
         }
-    }
-   
-   
+    }      
     #endregion
 
     #region Indexers

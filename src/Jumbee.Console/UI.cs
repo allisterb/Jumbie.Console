@@ -37,7 +37,7 @@ public static class UI
         isRunning = true;
     }
 
-    public static void Start<T>(Layout<T> layout, int width = 110, int height = 25, int paintInterval = 100, bool isTrueColorTerminal = true) where T : Control, IDrawingContextListener =>
+    public static void Start<T>(Layout<T> layout, int width = 110, int height = 25, int paintInterval = 100, bool isTrueColorTerminal = true) where T : ConsoleGUI.Common.Control, IDrawingContextListener =>
         Start(layout.control, width, height, paintInterval, isTrueColorTerminal);
 
     /// <summary>
