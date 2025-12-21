@@ -112,6 +112,11 @@ public abstract class Control : ConsoleGUI.Common.Control, IDisposable
     protected void Validate() => Interlocked.Exchange(ref paintRequests, 0u);
     #endregion
 
+    #region Properties
+    public ControlFrame? Frame { get; set; }
+
+    #endregion
+
     #region Fields
     protected static readonly Cell _emptyCell = new Cell(Character.Empty);
     protected internal uint paintRequests;

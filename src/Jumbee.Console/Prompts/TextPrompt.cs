@@ -119,7 +119,20 @@ public class TextPrompt : Prompt
         _inputStartY = ansiConsole.CursorY;        
         ansiConsole.Write(_input);
         _cursorScreenX = ansiConsole.CursorX;
-        _cursorScreenY = ansiConsole.CursorY;                        
+        _cursorScreenY = ansiConsole.CursorY;
+
+        if (Frame != null)
+        {
+            var viewportHeight = Frame.ViewportSize.Height;
+            if (_cursorScreenY < Frame.Top)
+            {
+                Frame.Top = _cursorScreenY;
+            }
+            else if (_cursorScreenY >= Frame.Top + viewportHeight)
+            {
+                Frame.Top = _cursorScreenY - viewportHeight + 1;
+            }
+        }
     }
 
     protected override void OnPaint(object? sender, UI.PaintEventArgs e)

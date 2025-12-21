@@ -37,6 +37,7 @@ public sealed class ControlFrame : ConsoleGUI.Common.Control, IDrawingContextLis
         _background = bgColor;
         _title = title;
         _control = control;
+        control.Frame = this;
         BindControl();
     }
     #endregion
@@ -157,6 +158,17 @@ public sealed class ControlFrame : ConsoleGUI.Common.Control, IDrawingContextLis
     
     public ConsoleKey ScrollDownKey { get; set; } = ConsoleKey.DownArrow;
 
+    public ConsoleGUI.Space.Size ViewportSize
+    {
+        get
+        {
+            var totalOffset = GetTotalOffset();
+            return new ConsoleGUI.Space.Size(
+                Math.Max(0, Size.Width - totalOffset.Left - totalOffset.Right),
+                Math.Max(0, Size.Height - totalOffset.Top - totalOffset.Bottom));
+        }
+    }
+
     private DrawingContext ControlContext
     {
         get => _controlContext;
@@ -179,15 +191,7 @@ public sealed class ControlFrame : ConsoleGUI.Common.Control, IDrawingContextLis
             {
                 // 1. Calculate Offsets & Viewport
                 // We replicate Initialize logic to ensure consistency
-                var borderOffset = BorderPlacement.AsOffset();
-                if (!string.IsNullOrEmpty(Title) && BorderPlacement.HasBorder(BorderPlacement.Top))
-                     borderOffset = new Offset(borderOffset.Left, borderOffset.Top + 2, borderOffset.Right, borderOffset.Bottom);
-                
-                var totalOffset = new Offset(
-                    borderOffset.Left + Margin.Left,
-                    borderOffset.Top + Margin.Top,
-                    borderOffset.Right + Margin.Right,
-                    borderOffset.Bottom + Margin.Bottom);
+                var totalOffset = GetTotalOffset();
 
                 var controlLeft = totalOffset.Left;
                 var controlTop = totalOffset.Top;
@@ -320,6 +324,20 @@ public sealed class ControlFrame : ConsoleGUI.Common.Control, IDrawingContextLis
     #endregion
 
     #region Methods
+    private Offset GetTotalOffset()
+    {
+        var borderOffset = BorderPlacement.AsOffset();
+
+        if (!string.IsNullOrEmpty(Title) && BorderPlacement.HasBorder(BorderPlacement.Top))
+            borderOffset = new Offset(borderOffset.Left, borderOffset.Top + 2, borderOffset.Right, borderOffset.Bottom);
+
+        return new Offset(
+            borderOffset.Left + Margin.Left,
+            borderOffset.Top + Margin.Top,
+            borderOffset.Right + Margin.Right,
+            borderOffset.Bottom + Margin.Bottom);
+    }
+
     public static SpectreBoxBorder GetSpectreBoxBorder(BorderStyle style)
     {
         return style switch
@@ -352,16 +370,7 @@ public sealed class ControlFrame : ConsoleGUI.Common.Control, IDrawingContextLis
         {
             using (Freeze())
             {
-                var borderOffset = BorderPlacement.AsOffset();
-
-                if (!string.IsNullOrEmpty(Title) && BorderPlacement.HasBorder(BorderPlacement.Top))
-                    borderOffset = new Offset(borderOffset.Left, borderOffset.Top + 2, borderOffset.Right, borderOffset.Bottom);
-                
-                var totalOffset = new Offset(
-                    borderOffset.Left + Margin.Left,
-                    borderOffset.Top + Margin.Top,
-                    borderOffset.Right + Margin.Right,
-                    borderOffset.Bottom + Margin.Bottom);
+                var totalOffset = GetTotalOffset();
 
                 // Available space for control (excluding scrollbar for now)
                 // We reserve 1 column for scrollbar at the right of control
@@ -378,7 +387,7 @@ public sealed class ControlFrame : ConsoleGUI.Common.Control, IDrawingContextLis
                     new Size(limitWidth, int.MaxValue));
 
                 // Clamp Top
-                var viewportHeight = Math.Max(0, Size.Height - totalOffset.Top + totalOffset.Bottom); 
+                var viewportHeight = Math.Max(0, Size.Height - totalOffset.Top - totalOffset.Bottom); 
                 // Note: Size.Height is current size. During Resize sequence, this might be stale?
                 // VerticalScrollPanel uses Size.Height (which is current).
                 // But here we are about to Resize.
@@ -393,7 +402,7 @@ public sealed class ControlFrame : ConsoleGUI.Common.Control, IDrawingContextLis
                 {
                     var controlHeight = ControlContext.Size.Height;
                     // If we expand to MaxSize, the viewport height will be at most MaxSize - Offsets.
-                    var maxViewportHeight = Math.Max(0, MaxSize.Height - totalOffset.Top + totalOffset.Bottom);
+                    var maxViewportHeight = Math.Max(0, MaxSize.Height - totalOffset.Top - totalOffset.Bottom);
                     // If MaxSize is infinite, maxViewportHeight is infinite?
                     if (MaxSize.Height == int.MaxValue) maxViewportHeight = int.MaxValue;
                     
@@ -425,7 +434,7 @@ public sealed class ControlFrame : ConsoleGUI.Common.Control, IDrawingContextLis
                 // Post-Resize Clamping:
                 if (ControlContext != null)
                 {
-                     viewportHeight = Math.Max(0, Size.Height - totalOffset.Top + totalOffset.Bottom);
+                     viewportHeight = Math.Max(0, Size.Height - totalOffset.Top - totalOffset.Bottom);
                      if (ControlContext.Size.Height > viewportHeight)
                      {
                          _top = Math.Min(ControlContext.Size.Height - viewportHeight, Math.Max(0, _top));

@@ -66,8 +66,8 @@ Since this is inefficient, try to batch multiple changes to control state collec
 
 ## Project coding instructions:
 - When generating new C# code, please follow the existing coding style.
-- All code should be compatible with C# 12.0.
-- Prefer new C# 12.0 features and syntax where applicable.
+- All code should be compatible with C# 14.0.
+- Prefer new C# 14.0 features and syntax where applicable.
 - Prefer functional programming paradigms and constructs where appropriate.
 - Prefer concise code over more verbose constructs.
 - Do not modify external library code located in the @ext directory. Changes should be limited to the code in the @src directory only.
