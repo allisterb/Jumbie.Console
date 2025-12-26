@@ -87,17 +87,8 @@ public class Program
         //UI.Start(internalGrid, width:250, height: 60, isTrueColorTerminal: true);
         // Create a separate timer to update the chartControl content periodically
         var random = new Random();
-        var chartTimer = new Timer(_ =>
-        {
-            // The SpectreControl.Content setter will acquire the lock internally
-            var newPlanning = (double)random.Next(10, 30);
-            var newCoding = (double)random.Next(40, 70);
-            var newTesting = (double)random.Next(20, 40);
-
-            // Update existing items using the bulk-update indexer
-            barChart["Planning", "Coding", "Testing"] = [newPlanning, newCoding, newTesting];
-
-        }, null, 0, 100);
+        var chartTimer = new Timer(_ => barChart["Planning", "Coding", "Testing"] = [random.Next(10, 30), random.Next(40, 70), random.Next(20, 40)],
+            null, 0, 100);
 
         // Main loop
         while (true)

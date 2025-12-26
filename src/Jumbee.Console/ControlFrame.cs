@@ -47,8 +47,7 @@ public sealed class ControlFrame : ConsoleGUI.Common.Control, IDrawingContextLis
     {
         get => _control;
         set
-        {
-            
+        {            
             _control = value;
             BindControl();
         }
@@ -238,38 +237,54 @@ public sealed class ControlFrame : ConsoleGUI.Common.Control, IDrawingContextLis
                             // Calculate thumb position
                             // Relative Y in viewport
                             var relY = position.Y - controlTop;
-                            
-                            long checkY = (long)relY * controlHeight;
-                            long startThumb = (long)_top * viewportHeight;
-                            long endThumb = (long)(_top + viewportHeight) * viewportHeight; 
 
-                            // Note: endThumb logic might need tweaking for exact pixel match, 
-                            // but this proportional logic is standard.
-                            // Ideally: 
-                            // thumbTop = (_top * viewportHeight) / controlHeight
-                            // thumbSize = (viewportHeight * viewportHeight) / controlHeight
-                            
-                            // Using the previous multiplication logic to avoid integer division issues:
-                            // if (relY * controlHeight < _top * viewportHeight) -> Background
-                            if (relY == 0) return ScrollBarUpArrow;
-                            if (relY == viewportHeight - 1) return ScrollBarDownArrow;
-                            
-                            if (checkY < startThumb) return ScrollBarBackground;
-                            if (checkY >= endThumb) return ScrollBarBackground; 
-                            
-                            return ScrollBarForeground;
+                            if (relY == 0)
+                            {
+                                return ScrollBarUpArrow;
+                            }
+                            else if (relY == viewportHeight - 1)
+                            {
+                                return ScrollBarDownArrow;
+                            }
+
+                            var trackHeight = viewportHeight - 2;
+                            if (trackHeight > 0)
+                            {
+                                var maxScroll = controlHeight - viewportHeight;
+                                var currentScroll = Math.Clamp(_top, 0, maxScroll);
+
+                                // Calculate thumb size based on visible proportion
+                                var thumbSize = (int)Math.Round((double)trackHeight * viewportHeight / controlHeight);
+                                thumbSize = Math.Max(1, thumbSize);
+                                
+                                var availableTrack = trackHeight - thumbSize;
+                                
+                                // Calculate thumb position based on scroll proportion
+                                var scrollRatio = (double)currentScroll / maxScroll;
+                                var thumbOffset = (int)Math.Round(scrollRatio * availableTrack);
+                                
+                                var thumbStart = 1 + thumbOffset;
+                                var thumbEnd = thumbStart + thumbSize;
+
+                                if (relY >= thumbStart && relY < thumbEnd)
+                                {
+                                    return ScrollBarForeground;
+                                }
+                            }
+
+                            return ScrollBarBackground;
                         }
                         else
                         {
-                             // No scrollbar needed -> allow control to draw here?
-                             // Current design reserves the column. 
-                             // If we reserved the column in Initialize (limitWidth), control shouldn't be here.
-                             // But for aesthetic, maybe draw empty or background?
-                             // If we return Character.Empty, we see background.
-                             // Let's return Character.Empty so control *could* extend if we changed limits,
-                             // but currently it acts as padding.
-                             // Actually, if we don't return here, it falls through to ControlContext.Contains
-                             // which might return true if we didn't limit width.
+                            // No scrollbar needed -> allow control to draw here?
+                            // Current design reserves the column. 
+                            // If we reserved the column in Initialize (limitWidth), control shouldn't be here.
+                            // But for aesthetic, maybe draw empty or background?
+                            // If we return Character.Empty, we see background.
+                            // Let's return Character.Empty so control *could* extend if we changed limits,
+                            // but currently it acts as padding.
+                            // Actually, if we don't return here, it falls through to ControlContext.Contains
+                            // which might return true if we didn't limit width
                         }
                     }
 
