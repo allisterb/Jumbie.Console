@@ -1,23 +1,12 @@
 namespace Jumbee.Console;
 
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading;
 
-using ConsoleGUI.Api;
-using ConsoleGUI.Common;
 using ConsoleGUI.Data;
 using ConsoleGUI.Input;
 using ConsoleGUI.Space;
-using ConsoleGUI.Utils;
-
 using Spectre.Console;
-using ConsoleGuiSize = ConsoleGUI.Space.Size;
-using Jumbee.Console;
 
 public class TextPrompt : Prompt
 {
@@ -28,7 +17,6 @@ public class TextPrompt : Prompt
         this._comparer = comparer;
         this._showCursor = showCursor;
         this._blinkCursor = blinkCursor;
-
     }
     #endregion
 
@@ -71,9 +59,6 @@ public class TextPrompt : Prompt
     #endregion
 
     #region Methods
-    
-    
-
     public override Cell this[Position position]
     {
         get
@@ -105,9 +90,7 @@ public class TextPrompt : Prompt
             }
         }
     }
-
     
-
     protected override void Render()
     {
         // Assumes lock is held by caller (Initialize or OnInput)

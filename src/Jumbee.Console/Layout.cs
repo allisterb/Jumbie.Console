@@ -2,8 +2,10 @@
 
 using ConsoleGUI;
 using ConsoleGUI.Common;
+using ConsoleGUI.Data;
+using ConsoleGUI.Space;
 
-public abstract class Layout<T> where T:ConsoleGUI.Common.Control, IDrawingContextListener
+public abstract class Layout<T> : IControl where T:ConsoleGUI.Common.Control, IDrawingContextListener
 {
     protected Layout(T control)
     {
@@ -17,4 +19,14 @@ public abstract class Layout<T> where T:ConsoleGUI.Common.Control, IDrawingConte
     public abstract IControl this[int row, int column] { get; }  
 
     public readonly T control;
+
+    public Cell this[Position position] => control[position];   
+
+    public Size Size => control.Size;   
+
+    public IDrawingContext Context
+    {
+        get => ((IControl) control).Context;
+        set => ((IControl)control).Context = value;
+    }
 }
