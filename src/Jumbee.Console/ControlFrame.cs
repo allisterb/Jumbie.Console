@@ -254,24 +254,20 @@ public sealed class ControlFrame : ConsoleGUI.Common.Control, IDrawingContextLis
                                 var currentScroll = Math.Clamp(_top, 0, maxScroll);
 
                                 // Calculate thumb size based on visible proportion
-                                var thumbSize = (int)Math.Round((double)trackHeight * viewportHeight / controlHeight);
+                                var thumbSize = Math.Max(1, (int)((long)trackHeight * viewportHeight / controlHeight));
                                 thumbSize = Math.Max(1, thumbSize);
                                 
                                 var availableTrack = trackHeight - thumbSize;
                                 
-                                // Calculate thumb position based on scroll proportion
-                                var scrollRatio = (double)currentScroll / maxScroll;
-                                var thumbOffset = (int)Math.Round(scrollRatio * availableTrack);
-                                
+                                // Calculate thumb position based on scroll proportion                      
+                                var thumbOffset = (int)((long)currentScroll * availableTrack / maxScroll);
                                 var thumbStart = 1 + thumbOffset;
-                                var thumbEnd = thumbStart + thumbSize;
 
-                                if (relY >= thumbStart && relY < thumbEnd)
+                                if (relY >= thumbStart && relY < thumbStart + thumbSize)
                                 {
                                     return ScrollBarForeground;
-                                }
+                                }                               
                             }
-
                             return ScrollBarBackground;
                         }
                         else
