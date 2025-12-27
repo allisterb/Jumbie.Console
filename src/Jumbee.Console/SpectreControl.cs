@@ -1,15 +1,12 @@
 namespace Jumbee.Console;
 
 using System;
-using System.Threading;
 
-using ConsoleGUI.Common;
-using ConsoleGUI.Data;
 using ConsoleGUI.Space;
 using Spectre.Console.Rendering;
 
 /// <summary>
-/// Wraps a Spectre <see cref="IRenderable"/> control for use with ConsoleGUI layout types. 
+/// Wraps a Spectre.Console <see cref="IRenderable"/> control for use with ConsoleGUI layout types. 
 /// </summary>
 /// <remarks>
 /// Uses an <see cref="AnsiConsoleBuffer"/> to render the control to a buffer.
@@ -21,9 +18,7 @@ public class SpectreControl<T> : Control where T : IRenderable
     #region Constructors
     public SpectreControl(T content) : base()
     {
-        _content = content;
-
-        
+        _content = content;        
     }
     #endregion
     

@@ -54,20 +54,22 @@ public class Program
         var dockedContent = CreateBox("Docked (Left)", DarkSlateGray1);
         var fillingContent = CreateBox("Filling Content", White);
         
-        var dockedPanel = new Jumbee.Console.DockedControl(
+        var dockedPanel = new Jumbee.Console.DockPanel(
             DockedControlPlacement.Left,
             dockedContent,
             fillingContent
         );
         //var dockedFrame = dockedPanel.WithFrame(borderStyle: BorderStyle.Single, title: "Docked Panel (Left)");
 
-
+        var tabpanel = new TabPanel(("Tab 1", CreateBox("T-Item 1", Magenta1)), ("Tab 2", CreateBox("T-Item 2", Cyan1)));
         // --- Main Layout ---
         // Combine them into a grid for display
-        var grid = new Jumbee.Console.Grid([10, 10, 20], [80], [
+        var grid = new Jumbee.Console.Grid([10, 10, 20, 20], [120], [
+            [tabpanel],
             [hStack],
             [vStack],
             [dockedPanel]
+            
         ]);
 
         //var mainFrame = grid.WithFrame(borderStyle: BorderStyle.Double, title: "Jumbee Console Layout Tests");

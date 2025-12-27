@@ -11,7 +11,7 @@ using Jumbee.Console;
 
 using ConsoleSize = ConsoleGUI.Space.Size;
 
-public class Program2
+public class ScrollDiag
 {
     static void Main2(string[] args)
     {

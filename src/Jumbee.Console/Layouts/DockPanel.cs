@@ -11,9 +11,9 @@ public enum DockedControlPlacement
     Left
 }
 
-public class DockedControl : Layout<ConsoleGUI.Controls.DockPanel>
+public class DockPanel : Layout<ConsoleGUI.Controls.DockPanel>
 {
-    public DockedControl(DockedControlPlacement placement, IControl dockedControl, IControl fillingControl)
+    public DockPanel(DockedControlPlacement placement, IControl dockedControl, IControl fillingControl)
         : base(new ConsoleGUI.Controls.DockPanel())
     {
         control.Placement = placement switch

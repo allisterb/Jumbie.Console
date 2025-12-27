@@ -5,7 +5,7 @@ using ConsoleGUI.Common;
 using ConsoleGUI.Data;
 using ConsoleGUI.Space;
 
-public abstract class Layout<T> : IControl where T:ConsoleGUI.Common.Control, IDrawingContextListener
+public abstract class Layout<T> : IControl, IDrawingContextListener where T:ConsoleGUI.Common.Control, IDrawingContextListener
 {
     protected Layout(T control)
     {
@@ -29,4 +29,8 @@ public abstract class Layout<T> : IControl where T:ConsoleGUI.Common.Control, ID
         get => ((IControl) control).Context;
         set => ((IControl)control).Context = value;
     }
+
+    public void OnRedraw(DrawingContext drawingContext) => control.OnRedraw(drawingContext);
+
+    public void OnUpdate(DrawingContext drawingContext, Rect rect) => control.OnUpdate(drawingContext, rect);   
 }
