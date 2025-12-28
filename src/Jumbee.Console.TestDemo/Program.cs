@@ -61,12 +61,12 @@ public class Program
         );
         //var dockedFrame = dockedPanel.WithFrame(borderStyle: BorderStyle.Single, title: "Docked Panel (Left)");
 
-        var tabpanel = new TabPanel(TabBarDock.Right, ("Tab 1", CreateBox("T-Item 1", Magenta1)), ("Tab 2", CreateBox("T-Item 2", Cyan1)));
+        var tabpanel = new TabPanel(TabBarDock.Left, ("Tab 1", CreateBox("T-Item 1", Black)), ("Tab 2", CreateBox("T-Item 2", Cyan1)));
 
         var vt = new VerticalTextLabel("hello");
         // --- Main Layout ---
         // Combine them into a grid for display
-        var grid = new Jumbee.Console.Grid([10, 10, 20, 20], [60], [
+        var grid = new Jumbee.Console.Grid([40, 10, 20, 20], [60], [
             [tabpanel],
             [hStack],
             [vStack],

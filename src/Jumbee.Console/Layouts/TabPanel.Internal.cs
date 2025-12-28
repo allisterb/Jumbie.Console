@@ -12,9 +12,9 @@ using ConsoleGUI.Space;
 public class Tab
 {    
     #region Constructors
-    internal Tab(TabBarDock tabBarDock, string name, IControl content, Color? inactivebgColor = null, Color? activebgColor = null)
+    internal Tab(TabBarDock tabBarDock, string name, IControl content, Color activebgColor = default, Color inactivebgColor = default)
     {
-        this.inactiveBgColor = inactiveBgColor.Equals(null) ? defaultinactiveBgColor : inactiveBgColor;
+        this.inactiveBgColor = inactiveBgColor.Equals(default) ? defaultinactiveBgColor : inactiveBgColor;
         this.activeBgColor = Color.White; //activeBgColor.Equals(null) ? defaultactiveBgColor : activeBgColor;
         bool isHorizontalTabBar = tabBarDock ==  TabBarDock.Top || tabBarDock == TabBarDock.Bottom;
         headerBackground = new Background
@@ -30,7 +30,7 @@ public class Tab
 
         Header = new Margin
         {
-            Offset = new Offset(0, 0, 1, 0),
+            Offset = isHorizontalTabBar ? new Offset(0, 0, 1, 0) : new Offset(0, 0, 0, 1),
             Content = headerBackground
         };
         Content = content;
@@ -97,7 +97,7 @@ public class TabPanelDockPanel : ConsoleGUI.Controls.DockPanel
     #region Methods
     public void AddTab(string name, IControl content)
     {
-        var newTab = new Tab(tabBarDock, name, content);
+        var newTab = new Tab(tabBarDock, name, content, Color.White);
         tabs.Add(newTab);
         if (IsHorizontalTabBar)
         {

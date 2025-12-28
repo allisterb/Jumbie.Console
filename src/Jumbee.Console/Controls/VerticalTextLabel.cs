@@ -2,26 +2,41 @@
 
 using ConsoleGUI.Data;
 using ConsoleGUI.Space;
+using System.Linq;
 
 public class VerticalTextLabel : CControl
 {
     #region Constructors
-    public VerticalTextLabel(string text, CColor? color = null)
+    public VerticalTextLabel(string text, Color fgcolor = default, Color bgcolor = default)
     {
-        _text = text;
-        _color = color;
+        _text = text;        
+        _fgcolor = fgcolor;
+        _bgcolor = bgcolor;
+        chars = _text.Select(t => new Character(t, foreground: _fgcolor, background: _bgcolor)).ToArray();
         size = new Size(1, _text.Length);
         Initialize();
     }
     #endregion
             
     #region Properties
-    public Color? Color
+    public Color FgColor
     {
-        get => _color;
+        get => _fgcolor;
         set
         {
-            _color = value;
+            _fgcolor = value;
+            chars = _text.Select(t => new Character(t, foreground: _fgcolor, background: _bgcolor)).ToArray();
+            Redraw();
+        }
+    }
+
+    public Color BgColor
+    {
+        get => _bgcolor;
+        set
+        {
+            _bgcolor = value;
+            chars = _text.Select(t => new Character(t, foreground: _fgcolor, background: _bgcolor)).ToArray();
             Redraw();
         }
     }
@@ -32,6 +47,7 @@ public class VerticalTextLabel : CControl
         set
         {
             _text = value;
+            chars = _text.Select(t => new Character(t, foreground: _fgcolor, background: _bgcolor)).ToArray();
             size = new Size(1, _text.Length);
             Initialize();
         }
@@ -43,14 +59,13 @@ public class VerticalTextLabel : CControl
     {
         get
         {
-
             if (string.IsNullOrEmpty(_text) || position.X >= 1 || position.Y >= Text.Length)
             {
-                return _emptyCell;                
+                return emptyCell;                
             }
             else
             {
-                return new Character(_text[position.Y], foreground: _color);
+                return chars[position.Y];
             }
         }
     }
@@ -62,8 +77,10 @@ public class VerticalTextLabel : CControl
 
     #region Fields
     private string _text = "";
-    private Color? _color;
+    private Color _fgcolor;
+    private Color _bgcolor;
     private Size size;
-    protected static readonly Cell _emptyCell = new Cell(Character.Empty);
+    private Character[] chars;
+    protected static readonly Cell emptyCell = new Cell(Character.Empty);
     #endregion
 }
