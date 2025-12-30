@@ -1,7 +1,7 @@
 ﻿namespace Jumbee.Console;
 
 using System;
-
+using System.Linq;
 using Spectre.Console;
 
 public class Spinner : AnimatedControl
@@ -15,6 +15,7 @@ public class Spinner : AnimatedControl
             _spinner = value;
             frameCount = _spinner.Frames.Count;
             interval = _spinner.Interval.Ticks;
+            spinnerFrames = _spinner.Frames.Select(Markup.Escape).ToArray();
         }
     }
 
@@ -24,6 +25,7 @@ public class Spinner : AnimatedControl
         set
         {
             _style = value;
+            styleMarkup = _style.ToMarkup();
         }
     }
 
@@ -43,11 +45,9 @@ public class Spinner : AnimatedControl
         if (Size.Width <= 0 || Size.Height <= 0) return;
 
         ansiConsole.Clear(true);
-
-        var frame = _spinner.Frames[frameIndex % _spinner.Frames.Count];
-        var frameMarkup = $"[{_style.ToMarkup()}]{Markup.Escape(frame)}[/]";
+        var frame = spinnerFrames[frameIndex % spinnerFrames.Length];
+        var frameMarkup = $"[{styleMarkup}]{frame}[/]";
         ansiConsole.Markup(frameMarkup);
-
         if (!string.IsNullOrEmpty(_text))
         {
             ansiConsole.Write(" ");
@@ -59,6 +59,8 @@ public class Spinner : AnimatedControl
     #region Fields
     private Spectre.Console.Spinner _spinner = Spectre.Console.Spinner.Known.Default;
     private Style _style = Style.Plain;
+    private string styleMarkup = Style.Plain.ToMarkup();
+    private string[] spinnerFrames = Spectre.Console.Spinner.Known.Default.Frames.Select(Markup.Escape).ToArray();
     private string _text = string.Empty;
     #endregion
 }
