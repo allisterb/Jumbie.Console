@@ -42,16 +42,13 @@ public class Spinner : AnimatedControl
     #region Methods
     protected sealed override void Render()
     {
-        if (Size.Width <= 0 || Size.Height <= 0) return;
-
         ansiConsole.Clear(true);
         var frame = spinnerFrames[frameIndex % spinnerFrames.Length];
         var frameMarkup = $"[{styleMarkup}]{frame}[/]";
         ansiConsole.Markup(frameMarkup);
         if (!string.IsNullOrEmpty(_text))
-        {
-            ansiConsole.Write(" ");
-            ansiConsole.Markup(_text);
+        {            
+            ansiConsole.Markup(" " + _text);
         }   
     }
     #endregion

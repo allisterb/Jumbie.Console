@@ -1,12 +1,10 @@
 ﻿namespace Jumbee.Console;
 
-using ConsoleGUI.Data;
-using ConsoleGUI.Space;
 using System;
 using System.Threading;
-using System.Threading.Tasks;
 
-using ConsoleGuiSize = ConsoleGUI.Space.Size;
+using ConsoleGUI.Data;
+using ConsoleGUI.Space;
 
 public abstract class Control : ConsoleGUI.Common.Control, IDisposable    
 {
@@ -56,12 +54,11 @@ public abstract class Control : ConsoleGUI.Common.Control, IDisposable
     protected sealed override void Initialize()
     {
         lock (UI.Lock)
-        {
-            // Handle the case when negative or overflow sizes may get passed down by parent containers
-            var size = new ConsoleGuiSize(Math.Min(Math.Max(0, MaxSize.Width), 1000), Math.Min(Math.Max(0, MaxSize.Height), 1000));
-
-            //if (targetSize.Width > 1000) targetSize = new ConsoleGuiSize(1000, targetSize.Height);
-            //if (targetSize.Height > 1000) targetSize = new ConsoleGuiSize(targetSize.Width, 1000);
+        {            
+            var size = (Size.Width == 0 && Size.Height == 0) ?
+                // Handle the case when negative or overflow sizes may get passed down by parent containers
+                new Size(Math.Min(1000, Math.Max(0, MaxSize.Width)), Math.Min(1000, Math.Max(0, MaxSize.Height))) 
+                : Size;
             Resize(size);
             consoleBuffer.Size = Size;
             Paint();

@@ -1,9 +1,9 @@
 ﻿namespace Jumbee.Console;
 
-using ConsoleGUI.Controls;
+using System.Linq;
+
 using ConsoleGUI.Data;
 using ConsoleGUI.Space;
-using System.Linq;
 
 public enum TextLabelOrientation
 {
@@ -14,7 +14,7 @@ public enum TextLabelOrientation
 /// <summary>
 /// Displays a single-line text label with a defined horizontal or vertical orientation and foreground and background color.
 /// </summary>
-public class TextLabel : CControl
+public class TextLabel : Control
 {
     #region Constructors
     public TextLabel(TextLabelOrientation orientation, string text, Color fgcolor = default, Color bgcolor = default)
@@ -23,9 +23,9 @@ public class TextLabel : CControl
         _text = text;        
         _fgcolor = fgcolor;
         _bgcolor = bgcolor;
-        chars = _text.Select(t => new Character(t, foreground: _fgcolor, background: _bgcolor)).ToArray();
+        chars = _text.Select(t => (Cell)new Character(t, foreground: _fgcolor, background: _bgcolor)).ToArray();
         size = orientation == TextLabelOrientation.Horizontal ? new Size(_text.Length, 1) :new Size(1, _text.Length);
-        Initialize();
+        Resize(size);
     }
     #endregion
             
@@ -36,8 +36,7 @@ public class TextLabel : CControl
         set
         {
             _fgcolor = value;
-            chars = _text.Select(t => new Character(t, foreground: _fgcolor, background: _bgcolor)).ToArray();
-            Redraw();
+            Invalidate();
         }
     }
 
@@ -47,8 +46,7 @@ public class TextLabel : CControl
         set
         {
             _bgcolor = value;
-            chars = _text.Select(t => new Character(t, foreground: _fgcolor, background: _bgcolor)).ToArray();
-            Redraw();
+            Invalidate();
         }
     }
 
@@ -58,9 +56,9 @@ public class TextLabel : CControl
         set
         {
             _text = value;
-            chars = _text.Select(t => new Character(t, foreground: _fgcolor, background: _bgcolor)).ToArray();
             size = _orientation == TextLabelOrientation.Horizontal ? new Size(_text.Length, 1) : new Size(1, _text.Length);
-            Initialize();
+            Resize(size);
+            Invalidate();
         }
     }
     #endregion
@@ -101,7 +99,8 @@ public class TextLabel : CControl
     #endregion
 
     #region Methods
-    protected override void Initialize() => Resize(size);
+    protected override void Render() => chars = _text.Select(t => (Cell)new Character(t, foreground: _fgcolor, background: _bgcolor)).ToArray();
+    
     #endregion
 
     #region Fields
@@ -110,7 +109,7 @@ public class TextLabel : CControl
     private Color _fgcolor;
     private Color _bgcolor;
     private Size size;
-    private Character[] chars;
+    private Cell[] chars = [];
     protected static readonly Cell emptyCell = new Cell(Character.Empty);
     #endregion
 }

@@ -5,19 +5,17 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using ConsoleGUI;
-using ConsoleGUI.Controls;
-using ConsoleGUI.Space;
 using ConsoleGUI.Input;
-using Jumbee.Console;
-
 using Spectre.Console;
 
+using Jumbee.Console;
 using static Jumbee.Console.Color;
-using System.Security.AccessControl;
 
 public class Program
 {
-    static void Main(string[] args)
+    static void Main(string[] args) => Test2(args);
+    
+    static void Test1(string[] args)
     {
         // --- Spectre.Console Controls ---
         // 1. Table
@@ -113,7 +111,7 @@ public class Program
         t.Wait();
     }
     
-    static void Main2(string[] args)
+    static void Test2(string[] args)
     {
         // --- Helpers ---
         IControl CreateBox(string text, Jumbee.Console.Color color)
@@ -133,7 +131,7 @@ public class Program
         }
 
         // --- 1. HorizontalStackPanel Test ---
-        var hStack = new Jumbee.Console.HorizontalStackPanel(
+        var hStack = new HorizontalStackPanel(
             CreateBox("H-Item 1", Red),
             CreateBox("H-Item 2", Green),
             CreateBox("H-Item 3", Blue)
