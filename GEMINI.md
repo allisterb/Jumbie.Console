@@ -33,8 +33,8 @@ NOTE: If in plan mode, do not implement the plan. You are only allowed to plan. 
 The project Jumbee.Console at @src/Jumbee.Console is a .NET library for building advanced console user interfaces. It is intended to be a combination of the layout and windowing features from the retained-mode ConsoleGUI library at 
 @ext/C-sharp-console-gui-framework/ConsoleGUI/ and the text styling and formatting and widget features and controls from the immediate-mode Spectre.Console library at @ext/spectre.console/src/Spectre.Console. 
 
-The initial plan created a bridge between the two libraries by implementing IAnsiConsole from Spectre.Console in the AnsiConsoleBuffer class to store Spectre.Console control output instead of writing it to the console immediately, 
-and a SpectreControl class for wrapping Spectre.Console controls as ConsoleGUI IControls to be used with ConsoleGUI control and layout classes.
+The initial plan created a bridge between the two libraries by implementing `IAnsiConsole` from Spectre.Console in the `AnsiConsoleBuffer` class at @src/Jumbee.Console/AnsiConsoleBuffer.cs to store Spectre.Console control output instead of writing it to the console immediately, 
+and a `SpectreControl` class for wrapping Spectre.Console controls as ConsoleGUI `IControl` to be used with ConsoleGUI control and layout classes.
 
 Support for updating and animating controls was added by using a single background thread started by the UI class running a timer that fires Paint events at regular intervals that controls use to update
 their state. Drawing conflicts during updates are mitigated by using a single lock object that gets passed to all controls derived from SpectreControl and AnimatedControl in Paint events to synchronize access to their internal state
@@ -59,7 +59,8 @@ Controls and ControlFrames can be placed in Jumbee.Console.Layout classes for ar
 The SpectreControl class is a generic class that wraps a Spectre.Console IRenderable control as a ConsoleGUI IControl. It uses the AnsiConsoleBuffer to render the Spectre control to a buffer, 
 which is used by ConsoleGUI to draw the control to the console screen. Note the following important considerations when deriving from this class:
 
-- Any public properties or methods that change the visual state of the control must call the Invalidate() method to notify ConsoleGUI that the control needs to be re-rendered. *Do not acquire the UI lock in publicly visible properties or methods of a control* as this will inevitably lead to deadlocks. Instead, call Invalidate() to signal that a control needs to be redrawn in the next Paint event.
+- Any public properties or methods that change the visual state of the control must call the Invalidate() method to indicate that the control needs to be re-rendered and re-drawn by parent containers. 
+- *Do not acquire the UI lock in publicly visible properties or methods of a control* as this will inevitably lead to deadlocks. Instead, call `Invalidate()` to signal that a control needs to be redrawn in the next Paint event.
 
 - When modifying control state stored in collections, use a copy-on-write strategy using the CloneContent() method and setting the Content property to the cloned object, to avoid modifying collections while they might be enumerated during rendering.
 Since this is inefficient, try to batch multiple changes to control state collections into a single property or index setter when possible.

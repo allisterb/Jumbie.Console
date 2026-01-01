@@ -10,7 +10,7 @@ using Spectre.Console.Rendering;
 /// <remarks>
 /// Uses an <see cref="AnsiConsoleBuffer"/> to render the control to a buffer.
 /// Public property setters and methods that change a control's visual state should call <see cref="Invalidate"/> to request a re-render on the next UI update tick.
-/// Non thread-safe changes should use CloneContent to create a copy of the IRenderable and modify that before replacing the control's content with the modified copy.
+/// Non thread-safe changes should use CloneContent to create a copy of the IRenderable content and modify that before replacing the control's content with the modified copy.
 /// </remarks>
 /// <typeparam name="T"></typeparam>
 public class SpectreControl<T> : Control where T : IRenderable

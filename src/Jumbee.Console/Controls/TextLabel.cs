@@ -23,7 +23,7 @@ public class TextLabel : Control
         _text = text;        
         _fgcolor = fgcolor;
         _bgcolor = bgcolor;
-        chars = _text.Select(t => (Cell)new Character(t, foreground: _fgcolor, background: _bgcolor)).ToArray();
+        chars = new Cell[_text.Length];
         size = orientation == TextLabelOrientation.Horizontal ? new Size(_text.Length, 1) :new Size(1, _text.Length);
         Resize(size);
     }
@@ -56,6 +56,7 @@ public class TextLabel : Control
         set
         {
             _text = value;
+            chars = new Cell[_text.Length];
             size = _orientation == TextLabelOrientation.Horizontal ? new Size(_text.Length, 1) : new Size(1, _text.Length);
             Resize(size);
             Invalidate();
@@ -72,7 +73,7 @@ public class TextLabel : Control
             {
                 return emptyCell;
             }
-            if (_orientation == TextLabelOrientation.Horizontal)
+            else if (_orientation == TextLabelOrientation.Horizontal)
             {
                 if (position.Y >= 1 || position.X >= Text.Length)
                 {
@@ -99,7 +100,14 @@ public class TextLabel : Control
     #endregion
 
     #region Methods
-    protected override void Render() => chars = _text.Select(t => (Cell)new Character(t, foreground: _fgcolor, background: _bgcolor)).ToArray();
+    // We use a 1D buffer to render instead of the 2D consoleBuffer as it's more efficient to access.
+    protected override void Render()
+    {
+        for (int i = 0; i < _text.Length; i++)
+        {
+            chars[i] = (Cell)new Character(_text[i], foreground: _fgcolor, background: _bgcolor);
+        }       
+    }
     
     #endregion
 
