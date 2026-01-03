@@ -78,7 +78,7 @@ public class Program
             .WithAsciiBorder()
             .WithTitle("Write here");
         var grid = new Jumbee.Console.Grid([15, 15], [40, 80], [
-            [spinner.WithFrame(borderStyle: BorderStyle.Rounded, fgColor: Red, title: "Spinna benz"), p],
+            [spinner.WithFrame(borderStyle: BorderStyle.Rounded, fgColor: Red, title: "Spinna benz"), prompt],
             [tableControl, barChart]
         ]);
 

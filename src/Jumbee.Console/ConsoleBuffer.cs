@@ -99,7 +99,10 @@ public class ConsoleBuffer : IConsole
         {
             buffer[i] = new Cell[size.Width + 1];
         }
-        Initialize();
+        for (int y = 0; y < size.Height; y++)
+        {
+            Array.Fill(buffer[y], emptyCell);
+        }
     }
     #endregion
 
