@@ -11,8 +11,17 @@ using Spectre.Console.Rendering;
 /// </summary>
 public class Tree : SpectreControl<Spectre.Console.Tree>
 {
+    #region Fields
     protected readonly IRenderable _rootLabel;
-    private static readonly PropertyInfo? _renderableProp = typeof(TreeNode).GetProperty("Renderable", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+    
+    private static readonly PropertyInfo renderableProp = 
+        typeof(TreeNode).GetProperty("Renderable", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public) 
+        ?? throw new InvalidOperationException("Could not find 'Renderable' property on TreeNode.");
+    
+    private static readonly FieldInfo rootField = 
+        typeof(Spectre.Console.Tree).GetField("_root", BindingFlags.Instance | BindingFlags.NonPublic)
+        ?? throw new InvalidOperationException("Could not find '_root' field on Tree.");
+    #endregion
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Tree"/> class.
@@ -20,8 +29,7 @@ public class Tree : SpectreControl<Spectre.Console.Tree>
     /// <param name="rootLabel">The tree root label.</param>
     public Tree(IRenderable rootLabel) : base(new Spectre.Console.Tree(rootLabel))
     {
-        _rootLabel = rootLabel;
-        contentBuffer = CloneContent();
+        _rootLabel = rootLabel;        
     }
 
     /// <summary>
@@ -31,6 +39,9 @@ public class Tree : SpectreControl<Spectre.Console.Tree>
     public Tree(string root) : this(new Markup(root))
     {
     }
+
+
+    public IRenderable RootLabel => _rootLabel;
 
     /// <summary>
     /// Gets or sets the tree guide lines.
@@ -86,9 +97,8 @@ public class Tree : SpectreControl<Spectre.Console.Tree>
     /// <param name="node">The node renderable.</param>
     public void AddNode(IRenderable node)
     {
-        UpdateContentBuffer();
-        contentBuffer.Nodes.Add(new TreeNode(node));
-        SwapContentBuffer();
+        UpdateContent(c => c.Nodes.Add(new TreeNode(node)));
+     
     }
 
     /// <summary>
@@ -97,12 +107,13 @@ public class Tree : SpectreControl<Spectre.Console.Tree>
     /// <param name="nodes">The node labels.</param>
     public void AddNodes(params string[] nodes)
     {
-        UpdateContentBuffer();
-        foreach (var node in nodes)
+        UpdateContent(c =>
         {
-            contentBuffer!.Nodes.Add(new TreeNode(new Markup(node)));
-        }
-        SwapContentBuffer();
+            foreach (var node in nodes)
+            {
+                c.Nodes.Add(new TreeNode(new Markup(node)));
+            }
+        });       
     }
 
     /// <summary>
@@ -120,7 +131,7 @@ public class Tree : SpectreControl<Spectre.Console.Tree>
         });        
     }
 
-    protected override void UpdateContentBuffer()
+    protected override void UpdateContentBuffer(Spectre.Console.Tree contentBuffer)
     {                               
         contentBuffer.Style = Content.Style;
         contentBuffer.Guide = Content.Guide;
@@ -136,9 +147,9 @@ public class Tree : SpectreControl<Spectre.Console.Tree>
     /// <inheritdoc/>
     protected override Spectre.Console.Tree CloneContent()
     {
-        if (_renderableProp == null) throw new InvalidOperationException("Could not find 'Renderable' property on TreeNode.");
-        
-        var newTree = new Spectre.Console.Tree(_rootLabel);
+        var root = rootField.GetValue(Content);
+        var rootRenderable = (IRenderable?) renderableProp.GetValue(root)!;
+        var newTree = new Spectre.Console.Tree(rootRenderable);
         newTree.Style = Content.Style;
         newTree.Guide = Content.Guide;
         newTree.Expanded = Content.Expanded;
@@ -153,7 +164,7 @@ public class Tree : SpectreControl<Spectre.Console.Tree>
 
     private TreeNode CloneNode(TreeNode original)
     {
-        var renderable = (IRenderable?)_renderableProp!.GetValue(original); 
+        var renderable = (IRenderable?)renderableProp!.GetValue(original); 
         if (renderable == null) throw new InvalidOperationException("TreeNode renderable is null.");
 
         var newNode = new TreeNode(renderable);

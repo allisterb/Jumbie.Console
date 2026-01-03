@@ -49,7 +49,7 @@ public abstract class SpectreControl<T> : Control where T : IRenderable
     /// <summary>
     /// Updates the content buffer to match the current content state.
     /// </summary>
-    protected abstract void UpdateContentBuffer();
+    protected abstract void UpdateContentBuffer(T contentBuffer);
 
     /// <summary>
     /// Swaps the current content with the content buffer.
@@ -63,7 +63,7 @@ public abstract class SpectreControl<T> : Control where T : IRenderable
                        
     protected void UpdateContent(Action<T> update)
     {
-        UpdateContentBuffer();
+        UpdateContentBuffer(contentBuffer);
         update(contentBuffer);
         SwapContentBuffer();
     }
@@ -118,6 +118,6 @@ public abstract class SpectreControl<T> : Control where T : IRenderable
 
     #region Fields
     private T _content;
-    protected T contentBuffer;
+    private T contentBuffer;
     #endregion
 }

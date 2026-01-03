@@ -91,8 +91,8 @@ public class BarChart : SpectreControl<Spectre.Console.BarChart>
                 var index = c.Data.FindIndex(i => i.Label == label);
                 if (index != -1)
                 {
-                    var oldItem = contentBuffer.Data[index];
-                    contentBuffer.Data[index] = new BarChartItem(label, value, oldItem.Color);
+                    var oldItem = c.Data[index];
+                    c.Data[index] = new BarChartItem(label, value, oldItem.Color);
                 }
                 else
                 {
@@ -133,8 +133,8 @@ public class BarChart : SpectreControl<Spectre.Console.BarChart>
 
                     if (index != -1)
                     {
-                        var oldItem = contentBuffer.Data[index];
-                        contentBuffer.Data[index] = new BarChartItem(label, val, oldItem.Color);
+                        var oldItem = c.Data[index];
+                        c.Data[index] = new BarChartItem(label, val, oldItem.Color);
                     }
                     else
                     {
@@ -145,21 +145,18 @@ public class BarChart : SpectreControl<Spectre.Console.BarChart>
         }
     }
 
-    protected override Spectre.Console.BarChart CloneContent()
+    protected override Spectre.Console.BarChart CloneContent() => new Spectre.Console.BarChart
     {
-        return new Spectre.Console.BarChart
-        {
-            Width = Content.Width,
-            Label = Content.Label,
-            LabelAlignment = Content.LabelAlignment,
-            ShowValues = Content.ShowValues,
-            Culture = Content.Culture,
-            MaxValue = Content.MaxValue,
-            ValueFormatter = Content.ValueFormatter
-        };
-    }
-
-    protected override void UpdateContentBuffer()
+        Width = Content.Width,
+        Label = Content.Label,
+        LabelAlignment = Content.LabelAlignment,
+        ShowValues = Content.ShowValues,
+        Culture = Content.Culture,
+        MaxValue = Content.MaxValue,
+        ValueFormatter = Content.ValueFormatter
+    };
+    
+    protected override void UpdateContentBuffer(Spectre.Console.BarChart contentBuffer)
     {
         contentBuffer.Width = Content.Width;
         contentBuffer.Label = Content.Label;
