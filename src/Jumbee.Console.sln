@@ -19,7 +19,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{C9B2828B-D
 		..\docs\Control Integration.md = ..\docs\Control Integration.md
 		..\GEMINI.md = ..\GEMINI.md
 		..\README.md = ..\README.md
-		README.md = README.md
 		..\docs\Spectre.Console Control Rendering.md = ..\docs\Spectre.Console Control Rendering.md
 	EndProjectSection
 EndProject
